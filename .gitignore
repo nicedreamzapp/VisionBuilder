@@ -1,0 +1,94 @@
+# Xcode
+.DS_Store
+*/build/*
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.xcuserstate
+*.xcscmblueprint
+*.xcworkspace
+!default.xcworkspace
+
+# CocoaPods
+Pods/
+*.xcworkspace
+Podfile.lock
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Carthage
+Carthage/Build/
+Carthage/Checkouts/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code Injection
+iOSInjectionProject/
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Playgrounds
+*.playground/*
+
+# AppCode
+.idea/
+
+# Archives
+*.xcarchive
+
+# Temporary files
+*.swp
+*.lock
+*~.nib
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Large binary files (optional - uncomment if you don't want to track these)
+# *.mlpackage
+# *.mlmodel
+# *.mlmodelc
+
+# Sensitive files
+*.p12
+*.mobileprovision
+*.cer
+
+# Environment files
+.env
+.env.*
+
+# Crash logs
+*.crash
+
+# Test outputs
+*.xcresult
+libtorch_ios-1.13.0.zip
+es_final_with_rules.json

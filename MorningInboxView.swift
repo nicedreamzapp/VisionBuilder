@@ -1,0 +1,554 @@
+//
+//  MorningInboxView.swift
+//  Vision Builder
+//
+//  Batch review interface for labeling object clusters
+
+import SwiftUI
+import Photos
+
+struct MorningInboxView: View {
+    @State private var controller: ActiveLearningController
+    @State private var clusterImages: [UUID: UIImage] = [:]
+    @State private var isLoadingImages: Bool = false
+    @State private var labelText: String = ""
+    @State private var showingConfirmation: Bool = false
+    @State private var confirmationLabel: String = ""
+    @State private var confirmationCandidates: [SimilarInstance] = []
+    @State private var showingDeleteAlert: Bool = false
+    @State private var showingDeleteAllAlert: Bool = false
+    @State private var isLoading: Bool = true
+
+    @Environment(\.dismiss) private var dismiss
+
+    private let recognitionEngine: ObjectRecognitionEngine
+
+    // Grid layout
+    private let columns = [
+        GridItem(.adaptive(minimum: 80, maximum: 120), spacing: 8)
+    ]
+
+    init(recognitionEngine: ObjectRecognitionEngine) {
+        self.recognitionEngine = recognitionEngine
+        _controller = State(initialValue: ActiveLearningController(recognitionEngine: recognitionEngine))
+    }
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Progress header
+                clusterProgressHeader
+
+                // Main content
+                Group {
+                    switch controller.state {
+                    case .idle:
+                        if isLoading {
+                            loadingView
+                        } else {
+                            emptyStateView
+                        }
+                    case .labelingObject:
+                        if let cluster = controller.currentCluster {
+                            clusterReviewView(cluster: cluster)
+                        }
+                    case .confirmingMatches:
+                        searchingView
+                    case .applyingLabels:
+                        applyingView
+                    case .complete:
+                        completeView
+                    }
+                }
+            }
+            .navigationTitle("Label Objects")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button(role: .destructive) {
+                            showingDeleteAllAlert = true
+                        } label: {
+                            Label("Delete All Clusters", systemImage: "trash.fill")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingConfirmation) {
+                ConfirmationView(
+                    seedLabel: confirmationLabel,
+                    candidates: confirmationCandidates,
+                    onComplete: { result in
+                        Task {
+                            await controller.confirmationCompleted(label: confirmationLabel, result: result)
+                            showingConfirmation = false
+                        }
+                    },
+                    onCancel: {
+                        showingConfirmation = false
+                        Task { await controller.moveToNextCluster() }
+                    }
+                )
+            }
+            .alert("Delete Cluster?", isPresented: $showingDeleteAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) {
+                    Task { await deleteCurrentCluster() }
+                }
+            } message: {
+                Text("Delete this cluster and all \(controller.currentCluster?.instances.count ?? 0) objects?")
+            }
+            .alert("Delete All?", isPresented: $showingDeleteAllAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete All", role: .destructive) {
+                    Task { await deleteAllClusters() }
+                }
+            } message: {
+                Text("Delete all unlabeled clusters?")
+            }
+        }
+        .task {
+            isLoading = true
+            await controller.startWorkflow()
+            isLoading = false
+            // Load images for first cluster
+            if let cluster = controller.currentCluster {
+                await loadClusterImages(cluster)
+            }
+        }
+        .onChange(of: controller.state) { _, newState in
+            handleStateChange(newState)
+        }
+        .onChange(of: controller.currentCluster?.id) { _, _ in
+            // Load images when cluster changes
+            if let cluster = controller.currentCluster {
+                Task { await loadClusterImages(cluster) }
+            }
+        }
+    }
+
+    // MARK: - Progress Header
+
+    private var clusterProgressHeader: some View {
+        let progress = controller.getProgress()
+        let currentIndex = progress.labeled + 1
+        let total = progress.total
+
+        return VStack(spacing: 8) {
+            HStack {
+                // Cluster indicator
+                VStack(alignment: .leading, spacing: 2) {
+                    if total > 0 {
+                        Text("Cluster \(currentIndex) of \(total)")
+                            .font(.headline)
+                            .foregroundStyle(
+                                LinearGradient(colors: [.appOrange, .appPink], startPoint: .leading, endPoint: .trailing)
+                            )
+
+                        if let cluster = controller.currentCluster {
+                            Text("\(cluster.instances.count) similar objects")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                    } else {
+                        Text("No clusters to review")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                // Progress ring
+                if total > 0 {
+                    ZStack {
+                        Circle()
+                            .stroke(Color.appOrange.opacity(0.2), lineWidth: 4)
+                            .frame(width: 44, height: 44)
+
+                        Circle()
+                            .trim(from: 0, to: CGFloat(progress.labeled) / CGFloat(max(1, total)))
+                            .stroke(Color.appOrange, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                            .frame(width: 44, height: 44)
+                            .rotationEffect(.degrees(-90))
+
+                        Text("\(Int(Float(progress.labeled) / Float(max(1, total)) * 100))%")
+                            .font(.caption2.bold())
+                            .foregroundColor(.appOrange)
+                    }
+                }
+            }
+
+            // Progress bar
+            if total > 0 {
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.appOrange.opacity(0.2))
+                            .frame(height: 4)
+
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.appOrange)
+                            .frame(width: geo.size.width * CGFloat(progress.labeled) / CGFloat(max(1, total)), height: 4)
+                    }
+                }
+                .frame(height: 4)
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+    }
+
+    // MARK: - Cluster Review View (Main Interface)
+
+    private func clusterReviewView(cluster: UnlabeledCluster) -> some View {
+        VStack(spacing: 0) {
+            // Thumbnail grid
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 8) {
+                    ForEach(cluster.instances, id: \.id) { instance in
+                        thumbnailView(for: instance)
+                    }
+                }
+                .padding()
+            }
+            .background(Color(.systemGroupedBackground))
+
+            // Bottom action bar
+            VStack(spacing: 12) {
+                // Label input
+                HStack(spacing: 12) {
+                    TextField("What are these objects?", text: $labelText)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.body)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.words)
+                        .submitLabel(.done)
+                        .onSubmit { saveLabel() }
+
+                    Button {
+                        saveLabel()
+                    } label: {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(labelText.isEmpty ? .gray : .appGreen)
+                    }
+                    .disabled(labelText.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+
+                // Action buttons
+                HStack(spacing: 16) {
+                    // Delete button
+                    Button {
+                        showingDeleteAlert = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                            .font(.subheadline)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.red)
+
+                    Spacer()
+
+                    // Skip button - goes to NEXT cluster
+                    Button {
+                        Task {
+                            labelText = ""
+                            clusterImages = [:]
+                            await controller.moveToNextCluster()
+                        }
+                    } label: {
+                        Label("Skip", systemImage: "forward.fill")
+                            .font(.subheadline)
+                    }
+                    .buttonStyle(.bordered)
+
+                    // Label all button
+                    Button {
+                        saveLabel()
+                    } label: {
+                        Label("Label All", systemImage: "tag.fill")
+                            .font(.subheadline.bold())
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.appOrange)
+                    .disabled(labelText.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            .padding()
+            .background(
+                Rectangle()
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.1), radius: 5, y: -2)
+            )
+        }
+    }
+
+    // MARK: - Thumbnail View
+
+    private func thumbnailView(for instance: ObjectInstance) -> some View {
+        Group {
+            if let image = clusterImages[instance.id] {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else if isLoadingImages {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray5))
+                    .frame(width: 80, height: 80)
+                    .overlay {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                    }
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray5))
+                    .frame(width: 80, height: 80)
+                    .overlay {
+                        Image(systemName: "photo")
+                            .foregroundColor(.gray)
+                    }
+            }
+        }
+    }
+
+    // MARK: - Other Views
+
+    private var loadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.5)
+            Text("Loading clusters...")
+                .font(.headline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private var emptyStateView: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 60))
+                .foregroundStyle(
+                    LinearGradient(colors: [.appGreen, .appTeal], startPoint: .topLeading, endPoint: .bottomTrailing)
+                )
+
+            VStack(spacing: 8) {
+                Text("All Caught Up!")
+                    .font(.title2.bold())
+
+                Text("No clusters to review. Scan your photo library to discover more objects.")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+
+            Button {
+                NotificationCenter.default.post(name: .switchToDatasetTab, object: nil)
+                dismiss()
+            } label: {
+                Label("Go to Dataset", systemImage: "folder.fill")
+                    .frame(maxWidth: 200)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.appOrange)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private var searchingView: some View {
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .stroke(Color.appOrange.opacity(0.2), lineWidth: 6)
+                    .frame(width: 80, height: 80)
+
+                Circle()
+                    .trim(from: 0, to: 0.3)
+                    .stroke(Color.appOrange, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: 80, height: 80)
+                    .rotationEffect(.degrees(-90))
+
+                Image(systemName: "magnifyingglass")
+                    .font(.title)
+                    .foregroundColor(.appOrange)
+            }
+
+            Text("Finding similar objects...")
+                .font(.headline)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private var applyingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.5)
+            Text("Applying labels...")
+                .font(.headline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private var completeView: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(LinearGradient(colors: [.appGreen.opacity(0.3), .appTeal.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(width: 100, height: 100)
+
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 50))
+                    .foregroundStyle(LinearGradient(colors: [.appGreen, .appTeal], startPoint: .topLeading, endPoint: .bottomTrailing))
+            }
+
+            VStack(spacing: 8) {
+                Text("All Done!")
+                    .font(.largeTitle.bold())
+
+                let progress = controller.getProgress()
+                Text("Labeled \(progress.labeled) clusters")
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+            }
+
+            Button {
+                dismiss()
+            } label: {
+                Text("Done")
+                    .frame(maxWidth: 200)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.appGreen)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
+    }
+
+    // MARK: - Actions
+
+    private func saveLabel() {
+        let label = labelText.trimmingCharacters(in: .whitespaces)
+        guard !label.isEmpty else { return }
+
+        Task {
+            await controller.objectLabeled(with: label)
+            labelText = ""
+            clusterImages = [:]
+        }
+    }
+
+    private func deleteCurrentCluster() async {
+        guard let cluster = controller.currentCluster else { return }
+        do {
+            try await recognitionEngine.deleteCluster(cluster)
+            clusterImages = [:]
+            await controller.moveToNextCluster()
+        } catch {
+            print("Error deleting cluster: \(error)")
+        }
+    }
+
+    private func deleteAllClusters() async {
+        do {
+            try await recognitionEngine.deleteAllUnlabeledClusters()
+            dismiss()
+        } catch {
+            print("Error deleting clusters: \(error)")
+        }
+    }
+
+    private func handleStateChange(_ newState: ActiveLearningController.WorkflowState) {
+        switch newState {
+        case .confirmingMatches(let label, _):
+            confirmationLabel = label
+            confirmationCandidates = controller.getCurrentConfirmationCandidates()
+            showingConfirmation = true
+        default:
+            break
+        }
+    }
+
+    // MARK: - Image Loading
+
+    private func loadClusterImages(_ cluster: UnlabeledCluster) async {
+        isLoadingImages = true
+        var loadedImages: [UUID: UIImage] = [:]
+
+        // Load images for all instances in parallel (limit to first 50 for performance)
+        let instancesToLoad = Array(cluster.instances.prefix(50))
+
+        await withTaskGroup(of: (UUID, UIImage?).self) { group in
+            for instance in instancesToLoad {
+                group.addTask {
+                    let image = await self.loadImage(for: instance)
+                    return (instance.id, image)
+                }
+            }
+
+            for await (id, image) in group {
+                if let image = image {
+                    loadedImages[id] = image
+                }
+            }
+        }
+
+        await MainActor.run {
+            self.clusterImages = loadedImages
+            self.isLoadingImages = false
+        }
+    }
+
+    private func loadImage(for instance: ObjectInstance) async -> UIImage? {
+        // Try cropImageData first
+        if let cropData = instance.cropImageData,
+           let image = UIImage(data: cropData),
+           image.size.width > 10 && image.size.height > 10 {
+            return image
+        }
+
+        // Try source path
+        if let sourcePath = instance.sourceImagePath,
+           let sourceImage = UIImage(contentsOfFile: sourcePath) {
+
+            // Try to generate segmented preview
+            if let contourPoints = instance.contourPoints, !contourPoints.isEmpty {
+                if let segmented = SegmentedPreviewRenderer.generateSegmentedPreview(
+                    from: sourceImage,
+                    contourPoints: contourPoints,
+                    backgroundColor: .white
+                ) {
+                    return segmented
+                }
+            }
+
+            // Fall back to bounding box crop
+            let bbox = instance.boundingBox.cgRect
+            if let cropped = SegmentedPreviewRenderer.generateCroppedPreview(
+                from: sourceImage,
+                boundingBox: bbox
+            ) {
+                return cropped
+            }
+        }
+
+        return nil
+    }
+}
