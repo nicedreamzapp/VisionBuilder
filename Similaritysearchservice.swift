@@ -23,6 +23,7 @@ struct ConfirmationResult {
 class SimilaritySearchService {
     struct Config {
         var minSimilarity: Float = 0.85
+        var clipMinSimilarity: Float = 0.70
         var maxCandidates: Int = 50
         var highConfidenceThreshold: Float = 0.92
     }
@@ -39,22 +40,32 @@ class SimilaritySearchService {
         excluding excludeIDs: Set<UUID> = []
     ) -> [SimilarInstance] {
         guard !seedInstance.embedding.isEmpty else { return [] }
-        
+
+        // Prefer CLIP embeddings when both seed and candidate have them
+        let useClip = seedInstance.clipEmbedding != nil
+        let threshold = useClip ? config.clipMinSimilarity : config.minSimilarity
+
         var results: [SimilarInstance] = []
-        
+
         for candidate in allInstances {
             if candidate.id == seedInstance.id || excludeIDs.contains(candidate.id) {
                 continue
             }
             if candidate.identity != nil { continue }
             guard !candidate.embedding.isEmpty else { continue }
-            
-            let similarity = cosineSimilarity(seedInstance.embedding, candidate.embedding)
-            if similarity >= config.minSimilarity {
+
+            let similarity: Float
+            if useClip, let seedClip = seedInstance.clipEmbedding, let candClip = candidate.clipEmbedding {
+                similarity = cosineSimilarity(seedClip, candClip)
+            } else {
+                similarity = cosineSimilarity(seedInstance.embedding, candidate.embedding)
+            }
+
+            if similarity >= threshold {
                 results.append(SimilarInstance(instance: candidate, similarity: similarity))
             }
         }
-        
+
         results.sort { $0.similarity > $1.similarity }
         if results.count > config.maxCandidates {
             results = Array(results.prefix(config.maxCandidates))

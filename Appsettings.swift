@@ -85,8 +85,25 @@ struct AppSettings {
         static var previewImageMaxDimension: CGFloat = 512
     }
     
+    // MARK: - MobileCLIP Settings
+
+    struct MobileCLIP {
+        static let modelName = "MobileCLIP-S0"
+        static let embeddingDimension = 512
+        static let imageInputSize: CGFloat = 256
+
+        /// Minimum text-image similarity for concept search results
+        static var textSearchMinSimilarity: Float = 0.15
+
+        /// Minimum confidence to show an auto-label suggestion
+        static var autoLabelMinConfidence: Float = 0.10
+
+        /// Number of auto-label suggestions to show
+        static var autoLabelTopK: Int = 3
+    }
+
     // MARK: - Clustering Settings
-    
+
     struct Clustering {
         /// Minimum cluster size to show in Morning Inbox
         /// Smaller clusters may be noise
@@ -168,6 +185,10 @@ struct AppSettings {
         Segmentation.boundingBoxPadding = 5.0
         Segmentation.previewImageMaxDimension = 512
 
+        MobileCLIP.textSearchMinSimilarity = 0.15
+        MobileCLIP.autoLabelMinConfidence = 0.10
+        MobileCLIP.autoLabelTopK = 3
+
         Clustering.minClusterSize = 1
         Clustering.maxClusterSize = 100
         Clustering.dbscanEpsilon = 0.15
@@ -238,6 +259,32 @@ struct SettingsView: View {
                     }
                 } header: {
                     Label("SAM2 Segmentation", systemImage: "wand.and.rays")
+                }
+
+                // MobileCLIP Info
+                Section {
+                    HStack {
+                        Text("Model")
+                        Spacer()
+                        Text(AppSettings.MobileCLIP.modelName)
+                            .foregroundColor(.secondary)
+                    }
+
+                    HStack {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.blue)
+                        Text("Text-image matching for concept search and auto-labeling")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    NavigationLink {
+                        MigrationSettingsView()
+                    } label: {
+                        Label("CLIP Embedding Migration", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                } header: {
+                    Label("MobileCLIP Intelligence", systemImage: "text.magnifyingglass")
                 }
 
                 // Detection Settings
@@ -380,6 +427,74 @@ struct SettingsView: View {
             } message: {
                 Text("Database has been reset. Please restart the app for changes to take effect.")
             }
+        }
+    }
+}
+
+// MARK: - Migration Settings View
+
+struct MigrationSettingsView: View {
+    @State private var isMigrating = false
+    @State private var migrationProgress: Double = 0
+    @State private var pendingCount: Int?
+    @State private var migrationComplete = false
+
+    private let migrationService = EmbeddingMigrationService()
+
+    var body: some View {
+        List {
+            Section {
+                if let count = pendingCount {
+                    LabeledContent("Instances needing CLIP embedding", value: "\(count)")
+                } else {
+                    HStack {
+                        Text("Checking...")
+                        Spacer()
+                        ProgressView()
+                    }
+                }
+            } header: {
+                Label("Status", systemImage: "info.circle")
+            }
+
+            Section {
+                if isMigrating {
+                    VStack(spacing: 8) {
+                        ProgressView(value: migrationProgress)
+                        Text(String(format: "%.0f%% complete", migrationProgress * 100))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else if migrationComplete {
+                    Label("Migration complete", systemImage: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                } else {
+                    Button("Generate CLIP Embeddings") {
+                        startMigration()
+                    }
+                    .disabled(pendingCount == nil || pendingCount == 0)
+                }
+            } header: {
+                Label("Migration", systemImage: "arrow.triangle.2.circlepath")
+            } footer: {
+                Text("Generates MobileCLIP embeddings for existing objects so they can be found by text search.")
+            }
+        }
+        .navigationTitle("CLIP Migration")
+        .task {
+            pendingCount = try? migrationService.pendingCount()
+        }
+    }
+
+    private func startMigration() {
+        isMigrating = true
+        Task {
+            try? await migrationService.migrateExistingInstances { progress in
+                migrationProgress = progress.fraction
+            }
+            isMigrating = false
+            migrationComplete = true
+            pendingCount = try? migrationService.pendingCount()
         }
     }
 }

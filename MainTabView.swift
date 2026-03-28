@@ -35,7 +35,7 @@ struct MainTabView: View {
                 .environmentObject(datasetManager)
 
             // Dataset Tab
-            DatasetTabView()
+            DatasetTabView(recognitionEngine: recognitionEngine)
                 .tabItem {
                     Label("Dataset", systemImage: "folder.fill")
                 }

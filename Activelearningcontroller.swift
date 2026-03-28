@@ -14,7 +14,9 @@ class ActiveLearningController {
     var unlabeledClusters: [UnlabeledCluster] = []
     var currentCluster: UnlabeledCluster?
     var state: WorkflowState = .idle
+    var currentSuggestions: [AutoLabelService.LabelSuggestion] = []
     private var allInstances: [ObjectInstance] = []
+    private let autoLabelService = AutoLabelService()
     
     init(
         recognitionEngine: ObjectRecognitionEngine,
@@ -50,6 +52,7 @@ class ActiveLearningController {
     }
     
     func startWorkflow() async {
+        await autoLabelService.warmUp()
         await loadUnlabeledClusters()
         await moveToNextCluster()
     }
@@ -65,11 +68,14 @@ class ActiveLearningController {
     }
     
     func moveToNextCluster() async {
+        currentSuggestions = []
         if let nextCluster = unlabeledClusters.first(where: { !$0.hasBeenPresented }) {
             currentCluster = nextCluster
+            currentSuggestions = autoLabelService.suggestLabels(for: nextCluster)
             state = .labelingObject(nextCluster.id)
         } else {
             currentCluster = nil
+            currentSuggestions = []
             state = .complete
         }
     }

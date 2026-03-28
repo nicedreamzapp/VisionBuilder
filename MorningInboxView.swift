@@ -223,6 +223,32 @@ struct MorningInboxView: View {
 
             // Bottom action bar
             VStack(spacing: 12) {
+                // Auto-label suggestions
+                if !controller.currentSuggestions.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(controller.currentSuggestions) { suggestion in
+                                Button {
+                                    labelText = suggestion.label
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Text(suggestion.label)
+                                            .font(.subheadline)
+                                        Text(String(format: "%.0f%%", suggestion.confidence * 100))
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(16)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+
                 // Label input
                 HStack(spacing: 12) {
                     TextField("What are these objects?", text: $labelText)

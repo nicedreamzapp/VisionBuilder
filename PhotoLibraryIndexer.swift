@@ -25,10 +25,19 @@ class PhotoLibraryIndexer {
     private let embeddingService: EmbeddingService
     private let recognitionEngine: ObjectRecognitionEngine
     private let embeddingQueue: EmbeddingQueue
-    
+    private let mobileCLIP = MobileCLIPService()
+    private let yoloDetector = YOLOObjectDetector()
+    private var objectFilterLabels: [(String, [Float])] = []
+
     var onProgress: ((String, Double, Int, Int) -> Void)?
+    var onPhotoProcessing: ((UIImage) -> Void)?
+    var onObjectFound: ((UIImage, String?) -> Void)?
     private let maxPhotosToProcess = 1000  // Scan up to 1000 photos for meaningful clusters
-    
+
+    /// Minimum CLIP similarity to any known object category to keep a detection.
+    /// 0.20 = only keep things CLIP confidently recognizes as a real object.
+    private let clipObjectThreshold: Float = 0.20
+
     init(
         sam2Processor: SAM2CoreMLProcessor,
         embeddingService: EmbeddingService,
@@ -43,6 +52,9 @@ class PhotoLibraryIndexer {
     func indexPhotoLibrary() async throws {
         print("🚀 Starting photo library indexing...")
         let startTime = Date()
+
+        // Pre-compute CLIP object categories for smart filtering
+        await warmUpObjectFilter()
 
         // Check photo library permission
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
@@ -148,6 +160,11 @@ class PhotoLibraryIndexer {
             throw IndexerError.imageLoadFailed
         }
 
+        // Show the photo being scanned in real-time
+        await MainActor.run {
+            onPhotoProcessing?(image)
+        }
+
         print("✅ Image loaded: \(image.size)")
 
         // Pre-filter 1: Check if image is mostly text (screenshots, documents)
@@ -157,132 +174,139 @@ class PhotoLibraryIndexer {
             return []
         }
 
-        // Pre-filter 2: Check if image has salient objects worth detecting
-        // Using relaxed threshold - only skip truly empty/uniform images
-        let saliencyScore = await checkImageSaliency(image)
-        print("🎯 Saliency score: \(String(format: "%.2f", saliencyScore))")
+        // Step 1: YOLO detects real objects (601 classes)
+        print("Running YOLO 601-class detection...")
+        let yoloDetections: [DetectedObject]
+        do {
+            yoloDetections = try await yoloDetector.detect(in: image)
+        } catch {
+            print("YOLO failed: \(error.localizedDescription), falling back to saliency")
+            // Fallback to old saliency method
+            let saliencyBoxes = await detectObjectsWithSAM2(in: image)
+            guard !saliencyBoxes.isEmpty else { return [] }
+            // Use old path for fallback
+            return try await processWithLabeledBoxes(saliencyBoxes, image: image, asset: asset, context: context)
+        }
 
-        if saliencyScore < 0.08 {
-            print("⏭️ Skipping image - very low saliency (no clear objects)")
+        print("YOLO found \(yoloDetections.count) objects: \(yoloDetections.map { "\($0.className) \(String(format: "%.0f%%", $0.confidence * 100))" }.joined(separator: ", "))")
+
+        guard !yoloDetections.isEmpty else {
             return []
         }
 
-        // Use SAM2 auto-detection
-        print("🎯 Running SAM2 auto-detection...")
-        let detectedBoxes = await detectObjectsWithSAM2(in: image)
-        print("✅ Found \(detectedBoxes.count) objects with SAM2")
-
-        guard !detectedBoxes.isEmpty else {
-            return []
-        }
-
-        // Filter out boxes that are too small or too large (likely noise or full-image)
-        // box.rect is already in NORMALIZED coordinates (0-1), so width * height IS the area ratio
-        let filteredBoxes = detectedBoxes.filter { box in
-            // Since box.rect is normalized (0-1), this directly gives us the area ratio
-            let areaRatio = box.rect.width * box.rect.height
-
-            // Keep objects between 0.5% and 85% of image area
-            let passes = areaRatio >= 0.005 && areaRatio <= 0.85
-            if !passes {
-                print("  ⚠️ Box filtered: area ratio \(String(format: "%.1f", areaRatio * 100))% (rect: \(box.rect))")
-            } else {
-                print("  ✅ Box accepted: area ratio \(String(format: "%.1f", areaRatio * 100))%")
-            }
-            return passes
-        }
-
-        if filteredBoxes.count < detectedBoxes.count {
-            print("📦 Kept \(filteredBoxes.count)/\(detectedBoxes.count) boxes after size filter")
-        }
-
-        guard !filteredBoxes.isEmpty else {
-            return []
-        }
-        
+        let imageWidth = image.size.width
+        let imageHeight = image.size.height
         var instances: [ObjectInstance] = []
 
-        for (index, box) in filteredBoxes.enumerated() {
-            print("  Object \(index + 1)/\(filteredBoxes.count)")
+        for (index, detection) in yoloDetections.enumerated() {
+            print("  [\(index + 1)/\(yoloDetections.count)] \(detection.className) (\(String(format: "%.0f%%", detection.confidence * 100)))")
 
-            // Get segmented crop from contour points
-            guard let normalizedContourPoints = box.contourPoints, !normalizedContourPoints.isEmpty else {
-                print("  ⚠️ No contour points")
-                continue
-            }
-
-            // CRITICAL: Convert normalized (0-1) contour points to pixel coordinates
-            let imageWidth = image.size.width
-            let imageHeight = image.size.height
-            let pixelContourPoints = normalizedContourPoints.map { point in
-                CGPoint(
-                    x: point.x * imageWidth,
-                    y: point.y * imageHeight
-                )
-            }
-
-            print("  📐 Contour: \(normalizedContourPoints.count) points, pixel coords: \(pixelContourPoints.first ?? .zero)")
-
-            // Generate tightly cropped segmented preview
-            guard let segmentedCrop = SegmentedPreviewRenderer.generateSegmentedPreview(
-                from: image,
-                contourPoints: pixelContourPoints,
-                backgroundColor: .white
-            ) else {
-                print("  ⚠️ Failed to generate segmented preview")
-                continue
-            }
-
-            print("  🖼️ Segmented crop size: \(segmentedCrop.size.width)x\(segmentedCrop.size.height)")
-
-            // Verify crop is not empty/tiny
-            if segmentedCrop.size.width < 10 || segmentedCrop.size.height < 10 {
-                print("  ⚠️ Segmented crop too small, skipping")
-                continue
-            }
-
-            print("  Generating embedding...")
-            let startTime = Date()
-            let embedding = try await embeddingQueue.generateEmbedding(for: segmentedCrop)
-            let elapsed = Date().timeIntervalSince(startTime)
-            print("  ✅ Embedding done in \(String(format: "%.2f", elapsed))s")
-            
-            // Create bounding box from normalized rect, converted to pixel coordinates
+            // Crop directly from YOLO bounding box — clean, tight, fast
             let pixelRect = CGRect(
-                x: box.rect.origin.x * imageWidth,
-                y: box.rect.origin.y * imageHeight,
-                width: box.rect.width * imageWidth,
-                height: box.rect.height * imageHeight
+                x: detection.rect.origin.x * imageWidth,
+                y: detection.rect.origin.y * imageHeight,
+                width: detection.rect.width * imageWidth,
+                height: detection.rect.height * imageHeight
             )
+
+            // Add small padding (5%) for context
+            let padW = pixelRect.width * 0.05
+            let padH = pixelRect.height * 0.05
+            let paddedRect = pixelRect.insetBy(dx: -padW, dy: -padH).intersection(
+                CGRect(origin: .zero, size: image.size)
+            )
+
+            guard paddedRect.width >= 20, paddedRect.height >= 20,
+                  let cgImage = image.cgImage,
+                  let croppedCG = cgImage.cropping(to: paddedRect) else {
+                print("    Crop failed, skipping")
+                continue
+            }
+
+            let segmentedCrop = UIImage(cgImage: croppedCG)
+
+            // Use YOLO box as contour points (for display consistency)
+            let pixelContourPoints = [
+                CGPoint(x: pixelRect.minX, y: pixelRect.minY),
+                CGPoint(x: pixelRect.maxX, y: pixelRect.minY),
+                CGPoint(x: pixelRect.maxX, y: pixelRect.maxY),
+                CGPoint(x: pixelRect.minX, y: pixelRect.maxY)
+            ]
+
+            // Generate embeddings
+            let embedding = try await embeddingQueue.generateEmbedding(for: segmentedCrop)
+            let clipEmbedding = try? await mobileCLIP.generateImageEmbedding(for: segmentedCrop)
 
             let instance = ObjectInstance(
                 embedding: embedding.vector,
                 boundingBox: BoundingBox(from: pixelRect),
-                contourPoints: pixelContourPoints,  // Store pixel coordinates
-                detectionConfidence: 0.9,
+                contourPoints: pixelContourPoints,
+                detectionConfidence: detection.confidence,
                 imageQuality: 0.8
             )
-            
+            instance.clipEmbedding = clipEmbedding
             instance._setCropUIImage(segmentedCrop)
-
-            // Verify crop data was saved
-            if let savedData = instance.cropImageData {
-                print("  💾 Crop data saved: \(savedData.count) bytes")
-            } else {
-                print("  ⚠️ WARNING: cropImageData is nil after saving!")
-            }
-
             instance.sourceImagePath = saveImageToDocuments(image, assetID: asset.localIdentifier)
-            print("  📁 Source saved to: \(instance.sourceImagePath ?? "nil")")
 
-            // Insert into SwiftData immediately
             context.insert(instance)
             instances.append(instance)
 
-            print("  ✅ Instance created: bbox=\(pixelRect), contour=\(pixelContourPoints.count) pts")
+            // Notify UI with YOLO class name
+            await MainActor.run {
+                onObjectFound?(segmentedCrop, detection.className)
+            }
+
+            print("    Saved: \(detection.className)")
         }
-        
-        print("✅ Created \(instances.count) instances")
+
+        print("Created \(instances.count) instances from \(yoloDetections.count) YOLO detections")
+        return instances
+    }
+
+    /// Run SAM2 on a single point to get precise segmentation contours.
+    private func runSAM2AtPoint(_ point: CGPoint, in image: UIImage) async -> LabeledBox? {
+        let manager = SAM2DetectionManager()
+        await MainActor.run { sam2Processor.manager = manager }
+
+        await sam2Processor.performSAM2TapDetection(
+            at: point,
+            in: image,
+            imageViewBounds: CGRect(origin: .zero, size: image.size)
+        )
+
+        // Wait briefly for SAM2 to finish
+        for _ in 0..<10 {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            let boxes = await manager.getDetectedBoxes()
+            if !boxes.isEmpty { return boxes.first }
+            if !(await manager.isStillProcessing()) { break }
+        }
+        return await manager.getDetectedBoxes().first
+    }
+
+    /// Fallback: process using old LabeledBox method (saliency-based)
+    private func processWithLabeledBoxes(_ boxes: [LabeledBox], image: UIImage, asset: PHAsset, context: ModelContext) async throws -> [ObjectInstance] {
+        let imageWidth = image.size.width
+        let imageHeight = image.size.height
+        var instances: [ObjectInstance] = []
+
+        for box in boxes {
+            guard let normalizedContourPoints = box.contourPoints, !normalizedContourPoints.isEmpty else { continue }
+            let pixelContourPoints = normalizedContourPoints.map { CGPoint(x: $0.x * imageWidth, y: $0.y * imageHeight) }
+            guard let segmentedCrop = SegmentedPreviewRenderer.generateSegmentedPreview(from: image, contourPoints: pixelContourPoints, backgroundColor: .white),
+                  segmentedCrop.size.width >= 10, segmentedCrop.size.height >= 10 else { continue }
+
+            let embedding = try await embeddingQueue.generateEmbedding(for: segmentedCrop)
+            let clipEmbedding = try? await mobileCLIP.generateImageEmbedding(for: segmentedCrop)
+            let pixelRect = CGRect(x: box.rect.origin.x * imageWidth, y: box.rect.origin.y * imageHeight, width: box.rect.width * imageWidth, height: box.rect.height * imageHeight)
+
+            let instance = ObjectInstance(embedding: embedding.vector, boundingBox: BoundingBox(from: pixelRect), contourPoints: pixelContourPoints, detectionConfidence: 0.9, imageQuality: 0.8)
+            instance.clipEmbedding = clipEmbedding
+            instance._setCropUIImage(segmentedCrop)
+            instance.sourceImagePath = saveImageToDocuments(image, assetID: asset.localIdentifier)
+            context.insert(instance)
+            instances.append(instance)
+        }
         return instances
     }
     
@@ -416,8 +440,9 @@ class PhotoLibraryIndexer {
                     instances: clusterMembers,
                     centroidEmbedding: centroid
                 )
-                
-                print("  📦 Created cluster with \(clusterMembers.count) instances")
+                cluster.clipCentroidEmbedding = calculateClipCentroid(of: clusterMembers)
+
+                print("  Created cluster with \(clusterMembers.count) instances")
                 clusters.append(cluster)
             }
         }
@@ -431,7 +456,7 @@ class PhotoLibraryIndexer {
                 instances: [instance],
                 centroidEmbedding: instance.embedding
             )
-            print("  📦 Created singleton cluster")
+            cluster.clipCentroidEmbedding = instance.clipEmbedding
             clusters.append(cluster)
         }
         
@@ -494,6 +519,63 @@ class PhotoLibraryIndexer {
         return centroid
     }
     
+    /// Pre-compute text embeddings for common object categories.
+    /// Used to filter out garbage detections during scanning.
+    private func warmUpObjectFilter() async {
+        guard objectFilterLabels.isEmpty else { return }
+        let labels = [
+            "shoe", "car", "phone", "cup", "bottle", "bag", "book", "laptop",
+            "watch", "glasses", "plant", "food", "clothing", "furniture", "animal",
+            "person", "face", "toy", "tool", "key", "pen", "ball", "hat",
+            "camera", "guitar", "bicycle", "chair", "table", "dog", "cat",
+            "bird", "fish", "flower", "fruit", "vegetable", "drink", "box",
+            "sign", "building", "vehicle", "electronics", "jewelry", "makeup",
+            "art", "decoration", "kitchen item", "bathroom item", "sports equipment"
+        ]
+        do {
+            try await mobileCLIP.ensureModelsLoaded()
+            for label in labels {
+                if let emb = try? await mobileCLIP.generateTextEmbedding(for: label) {
+                    objectFilterLabels.append((label, emb))
+                }
+            }
+            print("Object filter warmed up: \(objectFilterLabels.count) categories")
+        } catch {
+            print("Object filter warmup failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Check if a CLIP embedding matches any known object category.
+    /// Returns the best matching label and score, or nil if it's garbage.
+    private func identifyObject(clipEmbedding: [Float]) -> (label: String, score: Float)? {
+        guard !objectFilterLabels.isEmpty else { return nil }
+        var bestLabel = ""
+        var bestScore: Float = 0
+        for (label, textEmb) in objectFilterLabels {
+            let sim = MobileCLIPService.cosineSimilarity(clipEmbedding, textEmb)
+            if sim > bestScore {
+                bestScore = sim
+                bestLabel = label
+            }
+        }
+        return bestScore >= clipObjectThreshold ? (bestLabel, bestScore) : nil
+    }
+
+    private func calculateClipCentroid(of instances: [ObjectInstance]) -> [Float]? {
+        let clipEmbeddings = instances.compactMap { $0.clipEmbedding }
+        guard let first = clipEmbeddings.first, !first.isEmpty else { return nil }
+        let dim = first.count
+        var centroid = [Float](repeating: 0, count: dim)
+        for emb in clipEmbeddings {
+            for i in 0..<dim { centroid[i] += emb[i] }
+        }
+        let count = Float(clipEmbeddings.count)
+        centroid = centroid.map { $0 / count }
+        let norm = sqrt(centroid.reduce(0) { $0 + $1 * $1 })
+        if norm > 0 { centroid = centroid.map { $0 / norm } }
+        return centroid
+    }
+
     private func loadImage(from asset: PHAsset) -> UIImage? {
         let options = PHImageRequestOptions()
         options.deliveryMode = .highQualityFormat

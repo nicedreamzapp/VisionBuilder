@@ -19,6 +19,7 @@ final class ObjectIdentity {
     @Relationship(deleteRule: .cascade, inverse: \ObjectInstance.identity)
     var instances: [ObjectInstance]
     var prototypeEmbedding: [Float]
+    var clipPrototypeEmbedding: [Float]?
     var notes: String?
     var tags: [String]
     
@@ -53,6 +54,7 @@ final class ObjectInstance {
     var boundingBoxWidth: Double
     var boundingBoxHeight: Double
     var embedding: [Float]
+    var clipEmbedding: [Float]?
     var detectionConfidence: Float
     var imageQuality: Float
     @Attribute(.externalStorage) var cropImageData: Data?
@@ -103,6 +105,7 @@ final class UnlabeledCluster {
     @Relationship(deleteRule: .cascade)
     var instances: [ObjectInstance]
     var centroidEmbedding: [Float]
+    var clipCentroidEmbedding: [Float]?
     var createdAt: Date
     var representativeInstanceID: UUID?
     var hasBeenPresented: Bool
@@ -241,6 +244,22 @@ extension ObjectIdentity {
         let magnitude = sqrt(prototypeEmbedding.reduce(0) { $0 + $1 * $1 })
         if magnitude > 0 {
             prototypeEmbedding = prototypeEmbedding.map { $0 / magnitude }
+        }
+
+        // Also update CLIP prototype if any instances have CLIP embeddings
+        let clipInstances = instances.compactMap { $0.clipEmbedding }
+        if let firstClip = clipInstances.first, !firstClip.isEmpty {
+            let clipDim = firstClip.count
+            var clipSum = [Float](repeating: 0, count: clipDim)
+            for emb in clipInstances {
+                for (i, value) in emb.enumerated() { clipSum[i] += value }
+            }
+            let clipCount = Float(clipInstances.count)
+            clipPrototypeEmbedding = clipSum.map { $0 / clipCount }
+            let clipMag = sqrt(clipPrototypeEmbedding!.reduce(0) { $0 + $1 * $1 })
+            if clipMag > 0 {
+                clipPrototypeEmbedding = clipPrototypeEmbedding!.map { $0 / clipMag }
+            }
         }
     }
     

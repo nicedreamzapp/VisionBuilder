@@ -6,6 +6,7 @@
 import SwiftUI
 
 struct DatasetTabView: View {
+    var recognitionEngine: ObjectRecognitionEngine?
     @EnvironmentObject var exportManager: ExportManager
     @EnvironmentObject var datasetManager: DatasetManager
     @State private var searchText = ""
@@ -20,6 +21,12 @@ struct DatasetTabView: View {
     @State private var isIndexing = false
     @State private var indexingProgress: Double = 0
     @State private var indexingOperation = ""
+    @State private var showingConceptSearch = false
+
+    // Live scan feed
+    @State private var currentPhoto: UIImage?
+    @State private var discoveredObjects: [(image: UIImage, label: String?)] = []
+    @State private var objectCount = 0
 
     var filteredFolders: [LabelFolder] {
         if searchText.isEmpty {
@@ -35,6 +42,8 @@ struct DatasetTabView: View {
             ZStack {
                 if datasetManager.isLoading {
                     loadingView
+                } else if isIndexing {
+                    scanningView
                 } else if datasetManager.labelFolders.isEmpty {
                     emptyStateView
                 } else {
@@ -67,6 +76,12 @@ struct DatasetTabView: View {
                             Label("Scan Photo Library", systemImage: "photo.stack")
                         }
                         .disabled(isIndexing)
+
+                        Button {
+                            showingConceptSearch = true
+                        } label: {
+                            Label("Find by Description", systemImage: "text.magnifyingglass")
+                        }
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
@@ -89,6 +104,9 @@ struct DatasetTabView: View {
             .navigationDestination(item: $selectedFolder) { folder in
                 FolderDetailView(folder: folder)
                     .environmentObject(datasetManager)
+            }
+            .sheet(isPresented: $showingConceptSearch) {
+                ConceptSearchView(recognitionEngine: recognitionEngine)
             }
             .alert("Delete Label?", isPresented: $showingDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { folderToDelete = nil }
@@ -116,6 +134,129 @@ struct DatasetTabView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
+    }
+
+    // MARK: - Scanning View (live feed during photo library scan)
+
+    private let objectGridColumns = [
+        GridItem(.adaptive(minimum: 60, maximum: 80), spacing: 6)
+    ]
+
+    private var scanningView: some View {
+        VStack(spacing: 0) {
+            // Top: Current photo being scanned
+            ZStack {
+                Color.black
+
+                if let photo = currentPhoto {
+                    Image(uiImage: photo)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .transition(.opacity)
+                        .id(photo)
+                }
+
+                // Overlay: scanning indicator
+                VStack {
+                    HStack {
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 8, height: 8)
+                            Text("SCANNING")
+                                .font(.caption.bold())
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(12)
+
+                        Spacer()
+
+                        Text(String(format: "%.0f%%", indexingProgress * 100))
+                            .font(.caption.bold().monospacedDigit())
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(12)
+                    }
+                    .padding(12)
+                    Spacer()
+                }
+            }
+            .frame(height: 260)
+            .clipped()
+
+            // Middle: Progress bar
+            ProgressView(value: indexingProgress)
+                .progressViewStyle(.linear)
+                .tint(.appGreen)
+
+            // Bottom: Live discovered objects grid
+            VStack(spacing: 10) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Objects Found")
+                            .font(.headline)
+                        Text(indexingOperation)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Text("\(objectCount)")
+                        .font(.title.bold().monospacedDigit())
+                        .foregroundColor(.appGreen)
+                }
+                .padding(.horizontal)
+                .padding(.top, 12)
+
+                if discoveredObjects.isEmpty {
+                    VStack(spacing: 12) {
+                        ProgressView()
+                        Text("Waiting for objects...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView {
+                        LazyVGrid(columns: objectGridColumns, spacing: 6) {
+                            ForEach(Array(discoveredObjects.enumerated()), id: \.offset) { _, item in
+                                VStack(spacing: 2) {
+                                    Image(uiImage: item.image)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 70, height: 70)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                                    if let label = item.label {
+                                        Text(label)
+                                            .font(.system(size: 9))
+                                            .foregroundColor(.secondary)
+                                            .lineLimit(1)
+                                    }
+                                }
+                                .transition(.scale.combined(with: .opacity))
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+
+                // Cancel button
+                Button(role: .destructive) {
+                    isIndexing = false
+                } label: {
+                    Text("Cancel")
+                        .font(.subheadline)
+                }
+                .buttonStyle(.bordered)
+                .padding(.bottom, 12)
+            }
+        }
+        .background(Color(.systemGroupedBackground))
     }
 
     // MARK: - Empty State
@@ -346,6 +487,21 @@ struct DatasetTabView: View {
                 self.indexingProgress = progress
             }
         }
+        photoIndexer?.onPhotoProcessing = { photo in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                self.currentPhoto = photo
+            }
+        }
+        photoIndexer?.onObjectFound = { crop, label in
+            self.objectCount += 1
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                // Keep last 20 objects for the live grid
+                if self.discoveredObjects.count >= 20 {
+                    self.discoveredObjects.removeFirst()
+                }
+                self.discoveredObjects.append((image: crop, label: label))
+            }
+        }
     }
 
     private func startBackgroundIndexing() async {
@@ -354,6 +510,9 @@ struct DatasetTabView: View {
         isIndexing = true
         indexingProgress = 0
         indexingOperation = "Starting scan..."
+        currentPhoto = nil
+        discoveredObjects.removeAll()
+        objectCount = 0
 
         do {
             try await indexer.indexPhotoLibrary()
@@ -481,7 +640,7 @@ extension Notification.Name {
 }
 
 #Preview {
-    DatasetTabView()
+    DatasetTabView(recognitionEngine: nil)
         .environmentObject(ExportManager())
         .environmentObject(DatasetManager())
 }

@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00173807359015CF2D339D91 /* CLIPTokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE07F701F1AC0699583CB401 /* CLIPTokenizer.swift */; };
+		22C638EF089770F08DA09D8C /* EmbeddingMigrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A06C6DF89F0F5B093E8F8FC /* EmbeddingMigrationService.swift */; };
+		2C374CDF9944A8D8926F19B6 /* clip_vocab.json in Resources */ = {isa = PBXBuildFile; fileRef = F648D43794F8E88C16B8EFE2 /* clip_vocab.json */; };
+		3BA79C57CAA9AEFDCD2D6A90 /* yolov8n_oiv7.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 3BEB7866DF5C3719944EDDAE /* yolov8n_oiv7.mlpackage */; };
+		4062AF4C60DDA2579533D29D /* ConceptSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411FFD3B7077CB515964FC71 /* ConceptSearchView.swift */; };
+		51B0BA19D09A60415EFA6AA9 /* mobileclip_s0_text.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 2F9DA7FC5EAFC0C58D406FDC /* mobileclip_s0_text.mlpackage */; };
+		955DF5883C0FD4D3B3B9D034 /* AutoLabelService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E417A67E74224E364E5B8608 /* AutoLabelService.swift */; };
 		991812EE2E5DC2D200F21CCA /* LabelingQueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991812ED2E5DC2D200F21CCA /* LabelingQueueView.swift */; };
 		998269A12E37C28300572E3C /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 998269A02E37C28300572E3C /* CoreImage.framework */; };
 		998269AB2E37C2C900572E3C /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 998269A92E37C2C900572E3C /* Vision.framework */; };
@@ -34,6 +41,8 @@
 		999C7A7B2E59C3100001650D /* SAM2DetectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999C7A7A2E59C30A0001650D /* SAM2DetectionManager.swift */; };
 		999C7A7D2E59C3720001650D /* BoxCanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999C7A7C2E59C36E0001650D /* BoxCanvasView.swift */; };
 		999C7A8D2E59CEB50001650D /* CoreTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999C7A8C2E59CEAB0001650D /* CoreTypes.swift */; };
+		99C123462E63300200AABBCC /* ToastSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C123452E63300100AABBCC /* ToastSystem.swift */; };
+		99C123482E63300400AABBCC /* LabelingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C123472E63300300AABBCC /* LabelingSession.swift */; };
 		99D1A36A2E913C3500960A03 /* VisionProposalService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D1A3692E913C2F00960A03 /* VisionProposalService.swift */; };
 		99D1A36C2E913DE300960A03 /* EmbeddingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D1A36B2E913DDE00960A03 /* EmbeddingService.swift */; };
 		99D1A36E2E913EF100960A03 /* ObjectIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D1A36D2E913EEB00960A03 /* ObjectIdentity.swift */; };
@@ -53,8 +62,13 @@
 		99FB3DCB2E9661650036162D /* Confirmationview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99FB3DCA2E96615A0036162D /* Confirmationview.swift */; };
 		99FB3DCD2E96618F0036162D /* Activelearningcontroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99FB3DCC2E96618A0036162D /* Activelearningcontroller.swift */; };
 		99FB3DCF2E9662020036162D /* Appsettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99FB3DCE2E9661F90036162D /* Appsettings.swift */; };
-		99C123462E63300200AABBCC /* ToastSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C123452E63300100AABBCC /* ToastSystem.swift */; };
-		99C123482E63300400AABBCC /* LabelingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C123472E63300300AABBCC /* LabelingSession.swift */; };
+		BB15B3A834247C97705D37F3 /* MobileCLIPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97DBAD25E133E86AFE360818 /* MobileCLIPService.swift */; };
+		CB9D56D7C7A5EBA235E40110 /* UpgradePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B124D68CB2958FC59F9E5939 /* UpgradePromptView.swift */; };
+		D2BB38E274657723531D91E1 /* YOLOObjectDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2269046C585E9B5FC4A3A99 /* YOLOObjectDetector.swift */; };
+		D6B3E7C8600F5B3C5D07206B /* clip_merges.txt in Resources */ = {isa = PBXBuildFile; fileRef = 7C2E8B2038ACCF39A539DC98 /* clip_merges.txt */; };
+		EE9A479435680A970A291AFC /* yolo_class_names.txt in Resources */ = {isa = PBXBuildFile; fileRef = F7C10BA5295EA6403C2EF54B /* yolo_class_names.txt */; };
+		F57E6EF3DB46617B55E5815A /* ConceptSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1188732D81145BA209575562 /* ConceptSearchService.swift */; };
+		FBF0FB9481CDE58DE77AB447 /* mobileclip_s0_image.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 1EBB83979BB6E63AD9AEF9FA /* mobileclip_s0_image.mlpackage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -75,6 +89,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1188732D81145BA209575562 /* ConceptSearchService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConceptSearchService.swift; sourceTree = "<group>"; };
+		1EBB83979BB6E63AD9AEF9FA /* mobileclip_s0_image.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.mlpackage; path = mobileclip_s0_image.mlpackage; sourceTree = "<group>"; };
+		2F9DA7FC5EAFC0C58D406FDC /* mobileclip_s0_text.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.mlpackage; path = mobileclip_s0_text.mlpackage; sourceTree = "<group>"; };
+		3BEB7866DF5C3719944EDDAE /* yolov8n_oiv7.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.mlpackage; path = yolov8n_oiv7.mlpackage; sourceTree = "<group>"; };
+		411FFD3B7077CB515964FC71 /* ConceptSearchView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConceptSearchView.swift; sourceTree = "<group>"; };
+		4A06C6DF89F0F5B093E8F8FC /* EmbeddingMigrationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmbeddingMigrationService.swift; sourceTree = "<group>"; };
+		7C2E8B2038ACCF39A539DC98 /* clip_merges.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = clip_merges.txt; sourceTree = "<group>"; };
+		97DBAD25E133E86AFE360818 /* MobileCLIPService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileCLIPService.swift; sourceTree = "<group>"; };
 		991812ED2E5DC2D200F21CCA /* LabelingQueueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelingQueueView.swift; sourceTree = "<group>"; };
 		9982695F2E37BD6000572E3C /* Vision Builder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Vision Builder.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9982696C2E37BD6100572E3C /* Vision BuilderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Vision BuilderTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -105,6 +127,8 @@
 		999C7A7A2E59C30A0001650D /* SAM2DetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SAM2DetectionManager.swift; sourceTree = "<group>"; };
 		999C7A7C2E59C36E0001650D /* BoxCanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoxCanvasView.swift; sourceTree = "<group>"; };
 		999C7A8C2E59CEAB0001650D /* CoreTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreTypes.swift; sourceTree = "<group>"; };
+		99C123452E63300100AABBCC /* ToastSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastSystem.swift; sourceTree = "<group>"; };
+		99C123472E63300300AABBCC /* LabelingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelingSession.swift; sourceTree = "<group>"; };
 		99D1A3692E913C2F00960A03 /* VisionProposalService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProposalService.swift; sourceTree = "<group>"; };
 		99D1A36B2E913DDE00960A03 /* EmbeddingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddingService.swift; sourceTree = "<group>"; };
 		99D1A36D2E913EEB00960A03 /* ObjectIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectIdentity.swift; sourceTree = "<group>"; };
@@ -124,23 +148,33 @@
 		99FB3DCA2E96615A0036162D /* Confirmationview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confirmationview.swift; sourceTree = "<group>"; };
 		99FB3DCC2E96618A0036162D /* Activelearningcontroller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Activelearningcontroller.swift; sourceTree = "<group>"; };
 		99FB3DCE2E9661F90036162D /* Appsettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Appsettings.swift; sourceTree = "<group>"; };
-		99C123452E63300100AABBCC /* ToastSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastSystem.swift; sourceTree = "<group>"; };
-		99C123472E63300300AABBCC /* LabelingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelingSession.swift; sourceTree = "<group>"; };
+		B124D68CB2958FC59F9E5939 /* UpgradePromptView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UpgradePromptView.swift; sourceTree = "<group>"; };
+		E417A67E74224E364E5B8608 /* AutoLabelService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AutoLabelService.swift; sourceTree = "<group>"; };
+		EE07F701F1AC0699583CB401 /* CLIPTokenizer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CLIPTokenizer.swift; sourceTree = "<group>"; };
+		F2269046C585E9B5FC4A3A99 /* YOLOObjectDetector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = YOLOObjectDetector.swift; sourceTree = "<group>"; };
+		F648D43794F8E88C16B8EFE2 /* clip_vocab.json */ = {isa = PBXFileReference; includeInIndex = 1; path = clip_vocab.json; sourceTree = "<group>"; };
+		F7C10BA5295EA6403C2EF54B /* yolo_class_names.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = yolo_class_names.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		998269612E37BD6000572E3C /* Vision Builder */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = "Vision Builder";
 			sourceTree = "<group>";
 		};
 		9982696F2E37BD6100572E3C /* Vision BuilderTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = "Vision BuilderTests";
 			sourceTree = "<group>";
 		};
 		998269792E37BD6100572E3C /* Vision BuilderUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = "Vision BuilderUITests";
 			sourceTree = "<group>";
 		};
@@ -227,6 +261,20 @@
 				99D1A3892E9155B800960A03 /* ObjectIdentity+Images.swift */,
 				99C123452E63300100AABBCC /* ToastSystem.swift */,
 				99C123472E63300300AABBCC /* LabelingSession.swift */,
+				EE07F701F1AC0699583CB401 /* CLIPTokenizer.swift */,
+				97DBAD25E133E86AFE360818 /* MobileCLIPService.swift */,
+				1188732D81145BA209575562 /* ConceptSearchService.swift */,
+				411FFD3B7077CB515964FC71 /* ConceptSearchView.swift */,
+				E417A67E74224E364E5B8608 /* AutoLabelService.swift */,
+				4A06C6DF89F0F5B093E8F8FC /* EmbeddingMigrationService.swift */,
+				1EBB83979BB6E63AD9AEF9FA /* mobileclip_s0_image.mlpackage */,
+				2F9DA7FC5EAFC0C58D406FDC /* mobileclip_s0_text.mlpackage */,
+				F648D43794F8E88C16B8EFE2 /* clip_vocab.json */,
+				7C2E8B2038ACCF39A539DC98 /* clip_merges.txt */,
+				B124D68CB2958FC59F9E5939 /* UpgradePromptView.swift */,
+				F2269046C585E9B5FC4A3A99 /* YOLOObjectDetector.swift */,
+				3BEB7866DF5C3719944EDDAE /* yolov8n_oiv7.mlpackage */,
+				F7C10BA5295EA6403C2EF54B /* yolo_class_names.txt */,
 			);
 			sourceTree = "<group>";
 		};
@@ -268,8 +316,6 @@
 				998269612E37BD6000572E3C /* Vision Builder */,
 			);
 			name = "Vision Builder";
-			packageProductDependencies = (
-			);
 			productName = "Vision Builder";
 			productReference = 9982695F2E37BD6000572E3C /* Vision Builder.app */;
 			productType = "com.apple.product-type.application";
@@ -291,8 +337,6 @@
 				9982696F2E37BD6100572E3C /* Vision BuilderTests */,
 			);
 			name = "Vision BuilderTests";
-			packageProductDependencies = (
-			);
 			productName = "Vision BuilderTests";
 			productReference = 9982696C2E37BD6100572E3C /* Vision BuilderTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -314,8 +358,6 @@
 				998269792E37BD6100572E3C /* Vision BuilderUITests */,
 			);
 			name = "Vision BuilderUITests";
-			packageProductDependencies = (
-			);
 			productName = "Vision BuilderUITests";
 			productReference = 998269762E37BD6100572E3C /* Vision BuilderUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -372,6 +414,12 @@
 				99D2FB7E2E5ADDC800AFDABB /* SAM2_1SmallImageEncoderFLOAT16.mlpackage in Resources */,
 				99D2FB7F2E5ADDC800AFDABB /* SAM2_1SmallMaskDecoderFLOAT16.mlpackage in Resources */,
 				99D2FB802E5ADDC800AFDABB /* SAM2_1SmallPromptEncoderFLOAT16.mlpackage in Resources */,
+				FBF0FB9481CDE58DE77AB447 /* mobileclip_s0_image.mlpackage in Resources */,
+				51B0BA19D09A60415EFA6AA9 /* mobileclip_s0_text.mlpackage in Resources */,
+				2C374CDF9944A8D8926F19B6 /* clip_vocab.json in Resources */,
+				D6B3E7C8600F5B3C5D07206B /* clip_merges.txt in Resources */,
+				3BA79C57CAA9AEFDCD2D6A90 /* yolov8n_oiv7.mlpackage in Resources */,
+				EE9A479435680A970A291AFC /* yolo_class_names.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -439,6 +487,14 @@
 				998269CF2E37CE5400572E3C /* DetectionComponents.swift in Sources */,
 				99C123462E63300200AABBCC /* ToastSystem.swift in Sources */,
 				99C123482E63300400AABBCC /* LabelingSession.swift in Sources */,
+				00173807359015CF2D339D91 /* CLIPTokenizer.swift in Sources */,
+				BB15B3A834247C97705D37F3 /* MobileCLIPService.swift in Sources */,
+				F57E6EF3DB46617B55E5815A /* ConceptSearchService.swift in Sources */,
+				4062AF4C60DDA2579533D29D /* ConceptSearchView.swift in Sources */,
+				955DF5883C0FD4D3B3B9D034 /* AutoLabelService.swift in Sources */,
+				22C638EF089770F08DA09D8C /* EmbeddingMigrationService.swift in Sources */,
+				CB9D56D7C7A5EBA235E40110 /* UpgradePromptView.swift in Sources */,
+				D2BB38E274657723531D91E1 /* YOLOObjectDetector.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

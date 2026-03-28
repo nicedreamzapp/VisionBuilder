@@ -16,10 +16,10 @@ class VisionProposalService {
         let edgeMargin: CGFloat
         
         static let `default` = ProposalConfig(
-            maxProposals: 8,
-            minConfidence: 0.3,
-            minRegionSize: 0.05, // 5% of image
-            edgeMargin: 0.08 // 8% margin from edges
+            maxProposals: 5,
+            minConfidence: 0.5,
+            minRegionSize: 0.02, // 2% of image — real objects, not specks
+            edgeMargin: 0.05 // 5% margin from edges
         )
     }
     
@@ -259,17 +259,12 @@ class VisionProposalService {
         imageSize: CGSize,
         config: ProposalConfig
     ) -> [CGPoint] {
-        guard proposals.isEmpty else { return proposals }
-        
-        // If no proposals found, provide smart fallbacks
-        let fallbacks = [
-            CGPoint(x: imageSize.width * 0.5, y: imageSize.height * 0.4),  // Center-top
-            CGPoint(x: imageSize.width * 0.35, y: imageSize.height * 0.5), // Left-center
-            CGPoint(x: imageSize.width * 0.65, y: imageSize.height * 0.5), // Right-center
-        ]
-        
-        print("No Vision proposals, using fallback points")
-        return fallbacks
+        // No fallbacks — if Vision found nothing worth proposing, skip this image
+        // Random center-point proposals produce garbage detections
+        if proposals.isEmpty {
+            print("No confident proposals found — skipping image")
+        }
+        return proposals
     }
 }
 
