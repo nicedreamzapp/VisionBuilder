@@ -8,11 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		00173807359015CF2D339D91 /* CLIPTokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE07F701F1AC0699583CB401 /* CLIPTokenizer.swift */; };
+		1C7341F78F23C6DEC5307AF8 /* SAM3ConceptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B92008C2CDCC6AAE8C526CE8 /* SAM3ConceptService.swift */; };
 		22C638EF089770F08DA09D8C /* EmbeddingMigrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A06C6DF89F0F5B093E8F8FC /* EmbeddingMigrationService.swift */; };
 		2C374CDF9944A8D8926F19B6 /* clip_vocab.json in Resources */ = {isa = PBXBuildFile; fileRef = F648D43794F8E88C16B8EFE2 /* clip_vocab.json */; };
 		3BA79C57CAA9AEFDCD2D6A90 /* yolov8n_oiv7.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 3BEB7866DF5C3719944EDDAE /* yolov8n_oiv7.mlpackage */; };
 		4062AF4C60DDA2579533D29D /* ConceptSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411FFD3B7077CB515964FC71 /* ConceptSearchView.swift */; };
 		51B0BA19D09A60415EFA6AA9 /* mobileclip_s0_text.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 2F9DA7FC5EAFC0C58D406FDC /* mobileclip_s0_text.mlpackage */; };
+		60754559EF10917667CD3EF3 /* yolo26n.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = C0D100FFD5BF9028DCEF7CA2 /* yolo26n.mlpackage */; };
+		7848126E9D2D1C4641DC699C /* mobileclip2_s0_image.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 6CB14C253AFF6198FEA8C2D9 /* mobileclip2_s0_image.mlpackage */; };
+		799EE588B394F5906A89ECE4 /* FoundationModelsClusterNamer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60BD6F3302DB5D10BD7B1FA8 /* FoundationModelsClusterNamer.swift */; };
 		955DF5883C0FD4D3B3B9D034 /* AutoLabelService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E417A67E74224E364E5B8608 /* AutoLabelService.swift */; };
 		991812EE2E5DC2D200F21CCA /* LabelingQueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991812ED2E5DC2D200F21CCA /* LabelingQueueView.swift */; };
 		998269A12E37C28300572E3C /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 998269A02E37C28300572E3C /* CoreImage.framework */; };
@@ -62,6 +66,8 @@
 		99FB3DCB2E9661650036162D /* Confirmationview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99FB3DCA2E96615A0036162D /* Confirmationview.swift */; };
 		99FB3DCD2E96618F0036162D /* Activelearningcontroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99FB3DCC2E96618A0036162D /* Activelearningcontroller.swift */; };
 		99FB3DCF2E9662020036162D /* Appsettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99FB3DCE2E9661F90036162D /* Appsettings.swift */; };
+		AE980E2E27FDE14EBF8D5B1B /* mobileclip2_s0_text.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 5096AA41CADA5DA3D8855722 /* mobileclip2_s0_text.mlpackage */; };
+		B6F90EB82034892736E8C016 /* yolo26_class_names.txt in Resources */ = {isa = PBXBuildFile; fileRef = F23B54B3B5F1830EAB086B1F /* yolo26_class_names.txt */; };
 		BB15B3A834247C97705D37F3 /* MobileCLIPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97DBAD25E133E86AFE360818 /* MobileCLIPService.swift */; };
 		CB9D56D7C7A5EBA235E40110 /* UpgradePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B124D68CB2958FC59F9E5939 /* UpgradePromptView.swift */; };
 		D2BB38E274657723531D91E1 /* YOLOObjectDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2269046C585E9B5FC4A3A99 /* YOLOObjectDetector.swift */; };
@@ -95,6 +101,9 @@
 		3BEB7866DF5C3719944EDDAE /* yolov8n_oiv7.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.mlpackage; path = yolov8n_oiv7.mlpackage; sourceTree = "<group>"; };
 		411FFD3B7077CB515964FC71 /* ConceptSearchView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConceptSearchView.swift; sourceTree = "<group>"; };
 		4A06C6DF89F0F5B093E8F8FC /* EmbeddingMigrationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmbeddingMigrationService.swift; sourceTree = "<group>"; };
+		5096AA41CADA5DA3D8855722 /* mobileclip2_s0_text.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = mobileclip2_s0_text.mlpackage; sourceTree = SOURCE_ROOT; };
+		60BD6F3302DB5D10BD7B1FA8 /* FoundationModelsClusterNamer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FoundationModelsClusterNamer.swift; sourceTree = SOURCE_ROOT; };
+		6CB14C253AFF6198FEA8C2D9 /* mobileclip2_s0_image.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = mobileclip2_s0_image.mlpackage; sourceTree = SOURCE_ROOT; };
 		7C2E8B2038ACCF39A539DC98 /* clip_merges.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = clip_merges.txt; sourceTree = "<group>"; };
 		97DBAD25E133E86AFE360818 /* MobileCLIPService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileCLIPService.swift; sourceTree = "<group>"; };
 		991812ED2E5DC2D200F21CCA /* LabelingQueueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelingQueueView.swift; sourceTree = "<group>"; };
@@ -149,9 +158,12 @@
 		99FB3DCC2E96618A0036162D /* Activelearningcontroller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Activelearningcontroller.swift; sourceTree = "<group>"; };
 		99FB3DCE2E9661F90036162D /* Appsettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Appsettings.swift; sourceTree = "<group>"; };
 		B124D68CB2958FC59F9E5939 /* UpgradePromptView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UpgradePromptView.swift; sourceTree = "<group>"; };
+		B92008C2CDCC6AAE8C526CE8 /* SAM3ConceptService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SAM3ConceptService.swift; sourceTree = SOURCE_ROOT; };
+		C0D100FFD5BF9028DCEF7CA2 /* yolo26n.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = yolo26n.mlpackage; sourceTree = SOURCE_ROOT; };
 		E417A67E74224E364E5B8608 /* AutoLabelService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AutoLabelService.swift; sourceTree = "<group>"; };
 		EE07F701F1AC0699583CB401 /* CLIPTokenizer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CLIPTokenizer.swift; sourceTree = "<group>"; };
 		F2269046C585E9B5FC4A3A99 /* YOLOObjectDetector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = YOLOObjectDetector.swift; sourceTree = "<group>"; };
+		F23B54B3B5F1830EAB086B1F /* yolo26_class_names.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = yolo26_class_names.txt; sourceTree = SOURCE_ROOT; };
 		F648D43794F8E88C16B8EFE2 /* clip_vocab.json */ = {isa = PBXFileReference; includeInIndex = 1; path = clip_vocab.json; sourceTree = "<group>"; };
 		F7C10BA5295EA6403C2EF54B /* yolo_class_names.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = yolo_class_names.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -275,6 +287,12 @@
 				F2269046C585E9B5FC4A3A99 /* YOLOObjectDetector.swift */,
 				3BEB7866DF5C3719944EDDAE /* yolov8n_oiv7.mlpackage */,
 				F7C10BA5295EA6403C2EF54B /* yolo_class_names.txt */,
+				B92008C2CDCC6AAE8C526CE8 /* SAM3ConceptService.swift */,
+				60BD6F3302DB5D10BD7B1FA8 /* FoundationModelsClusterNamer.swift */,
+				6CB14C253AFF6198FEA8C2D9 /* mobileclip2_s0_image.mlpackage */,
+				5096AA41CADA5DA3D8855722 /* mobileclip2_s0_text.mlpackage */,
+				C0D100FFD5BF9028DCEF7CA2 /* yolo26n.mlpackage */,
+				F23B54B3B5F1830EAB086B1F /* yolo26_class_names.txt */,
 			);
 			sourceTree = "<group>";
 		};
@@ -420,6 +438,10 @@
 				D6B3E7C8600F5B3C5D07206B /* clip_merges.txt in Resources */,
 				3BA79C57CAA9AEFDCD2D6A90 /* yolov8n_oiv7.mlpackage in Resources */,
 				EE9A479435680A970A291AFC /* yolo_class_names.txt in Resources */,
+				7848126E9D2D1C4641DC699C /* mobileclip2_s0_image.mlpackage in Resources */,
+				AE980E2E27FDE14EBF8D5B1B /* mobileclip2_s0_text.mlpackage in Resources */,
+				60754559EF10917667CD3EF3 /* yolo26n.mlpackage in Resources */,
+				B6F90EB82034892736E8C016 /* yolo26_class_names.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -495,6 +517,8 @@
 				22C638EF089770F08DA09D8C /* EmbeddingMigrationService.swift in Sources */,
 				CB9D56D7C7A5EBA235E40110 /* UpgradePromptView.swift in Sources */,
 				D2BB38E274657723531D91E1 /* YOLOObjectDetector.swift in Sources */,
+				1C7341F78F23C6DEC5307AF8 /* SAM3ConceptService.swift in Sources */,
+				799EE588B394F5906A89ECE4 /* FoundationModelsClusterNamer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -30,6 +30,15 @@ Podfile.lock
 .swiftpm/
 Package.resolved
 
+# Model conversion venv (scripts/convert_models.sh)
+.venv-models/
+
+# Generated mlpackages — over GitHub 100MB limit; regenerate with scripts/convert_models.sh
+mobileclip2_s0_image.mlpackage/
+mobileclip2_s0_text.mlpackage/
+yolo26n.mlpackage/
+yolo26n.pt
+
 # Carthage
 Carthage/Build/
 Carthage/Checkouts/

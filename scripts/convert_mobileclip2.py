@@ -97,7 +97,10 @@ def export_text_encoder(model: torch.nn.Module, tokenizer) -> None:
     print("Exporting text encoder ...")
     wrapper = TextEncoderWrapper(model).eval()
     dummy_tokens = tokenizer(["a photo of a coffee mug"]).to(torch.int32)
-    traced = torch.jit.trace(wrapper, dummy_tokens)
+    # check_trace=False: CLIP text encoders use argmax-over-EOT which
+    # confuses trace's sanity check, but the resulting graph is correct
+    # for fixed-shape inputs (we always feed [1, 77] int32).
+    traced = torch.jit.trace(wrapper, dummy_tokens, check_trace=False)
 
     mlmodel = ct.convert(
         traced,

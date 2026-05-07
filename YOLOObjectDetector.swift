@@ -42,11 +42,6 @@ class YOLOObjectDetector {
     func ensureLoaded() async throws {
         guard !isLoaded else { return }
 
-        if let url = Bundle.main.url(forResource: "yolo_class_names", withExtension: "txt"),
-           let content = try? String(contentsOf: url, encoding: .utf8) {
-            classNames = content.components(separatedBy: "\n").filter { !$0.isEmpty }
-        }
-
         let (modelName, generation) = resolvePreferredModelName()
         guard let modelURL = Bundle.main.url(forResource: modelName, withExtension: "mlmodelc") else {
             throw YOLOError.modelNotFound
@@ -55,6 +50,18 @@ class YOLOObjectDetector {
         config.computeUnits = .cpuAndNeuralEngine
         model = try MLModel(contentsOf: modelURL, configuration: config)
         loadedGeneration = generation
+
+        // Load the class names file matching the loaded generation.
+        // YOLOv8 OIV7 = 601 classes; YOLO26n = 80 COCO classes.
+        let classFile = generation == .v26 ? "yolo26_class_names" : "yolo_class_names"
+        if let url = Bundle.main.url(forResource: classFile, withExtension: "txt"),
+           let content = try? String(contentsOf: url, encoding: .utf8) {
+            classNames = content.components(separatedBy: "\n").filter { !$0.isEmpty }
+        } else if let url = Bundle.main.url(forResource: "yolo_class_names", withExtension: "txt"),
+                  let content = try? String(contentsOf: url, encoding: .utf8) {
+            // Last-resort fallback if v26 file missing.
+            classNames = content.components(separatedBy: "\n").filter { !$0.isEmpty }
+        }
 
         // Log model input spec so we can verify format
         if let desc = model?.modelDescription.inputDescriptionsByName["image"] {

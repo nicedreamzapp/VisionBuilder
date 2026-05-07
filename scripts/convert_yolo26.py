@@ -30,12 +30,16 @@ def main() -> None:
         nms=False,            # Swift-side postprocessing matches existing detector
         int8=False,
     )
-    exported = Path(exported_path)
+    exported = Path(exported_path).resolve()
+    target = OUTPUT.resolve()
 
-    if OUTPUT.exists():
-        shutil.rmtree(OUTPUT)
-    shutil.move(str(exported), str(OUTPUT))
-    print(f"  → {OUTPUT}")
+    if exported == target:
+        print(f"  → {target} (already at target path)")
+    else:
+        if target.exists():
+            shutil.rmtree(target)
+        shutil.move(str(exported), str(target))
+        print(f"  → {target}")
     print("YOLO26 export complete.")
 
 
