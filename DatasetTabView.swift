@@ -3,6 +3,7 @@
 //  Vision Builder - Dataset browsing and management
 //
 
+import SwiftData
 import SwiftUI
 
 struct DatasetTabView: View {
@@ -245,11 +246,11 @@ struct DatasetTabView: View {
                     }
                 }
 
-                // Cancel button
+                // Cancel button — saves found objects, stops scan
                 Button(role: .destructive) {
-                    isIndexing = false
+                    cancelIndexing()
                 } label: {
-                    Text("Cancel")
+                    Text("Stop & Save")
                         .font(.subheadline)
                 }
                 .buttonStyle(.bordered)
@@ -436,8 +437,8 @@ struct DatasetTabView: View {
                 Text("Scanning Photos")
                     .font(.headline)
                 Spacer()
-                Button("Cancel") {
-                    isIndexing = false
+                Button("Stop & Save") {
+                    cancelIndexing()
                 }
                 .font(.caption)
             }
@@ -504,8 +505,30 @@ struct DatasetTabView: View {
         }
     }
 
+    private func cancelIndexing() {
+        photoIndexer?.isCancelled = true
+        indexingOperation = "Cancelling... saving found objects"
+    }
+
     private func startBackgroundIndexing() async {
-        guard let indexer = photoIndexer else { return }
+        // Make sure indexer exists
+        if photoIndexer == nil {
+            initializeIndexer()
+        }
+        guard let indexer = photoIndexer else {
+            ToastManager.shared.showError("Scan failed", message: "Could not create indexer")
+            return
+        }
+
+        // Verify database is working before scanning
+        do {
+            let context = ObjectRecognitionStorage.shared.context
+            _ = try context.fetch(FetchDescriptor<ObjectInstance>())
+            print("Database OK — starting scan")
+        } catch {
+            ToastManager.shared.showError("Database error", message: "Delete and reinstall the app. \(error.localizedDescription)")
+            return
+        }
 
         isIndexing = true
         indexingProgress = 0
@@ -516,9 +539,14 @@ struct DatasetTabView: View {
 
         do {
             try await indexer.indexPhotoLibrary()
-            ToastManager.shared.showSuccess("Photo scan complete")
+            if indexer.isCancelled {
+                ToastManager.shared.showSuccess("Scan stopped — \(objectCount) objects saved")
+            } else {
+                ToastManager.shared.showSuccess("Scan complete — \(objectCount) objects found")
+            }
         } catch {
-            ToastManager.shared.showError("Scan failed", message: error.localizedDescription)
+            print("Scan error: \(error)")
+            ToastManager.shared.showError("Scan failed", message: "\(error.localizedDescription)")
         }
 
         isIndexing = false

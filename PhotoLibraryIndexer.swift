@@ -32,7 +32,30 @@ class PhotoLibraryIndexer {
     var onProgress: ((String, Double, Int, Int) -> Void)?
     var onPhotoProcessing: ((UIImage) -> Void)?
     var onObjectFound: ((UIImage, String?) -> Void)?
-    private let maxPhotosToProcess = 1000  // Scan up to 1000 photos for meaningful clusters
+    private var _isCancelled = false
+    private let cancelLock = NSLock()
+    var isCancelled: Bool {
+        get { cancelLock.lock(); defer { cancelLock.unlock() }; return _isCancelled }
+        set { cancelLock.lock(); _isCancelled = newValue; cancelLock.unlock() }
+    }
+    private let maxPhotosToProcess = 200
+
+    /// Key for storing processed photo IDs so we skip them on re-scan
+    private static let processedPhotosKey = "processedPhotoAssetIDs"
+
+    private static func getProcessedPhotoIDs() -> Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: processedPhotosKey) ?? [])
+    }
+
+    private static func markPhotoProcessed(_ assetID: String) {
+        var ids = UserDefaults.standard.stringArray(forKey: processedPhotosKey) ?? []
+        ids.append(assetID)
+        UserDefaults.standard.set(ids, forKey: processedPhotosKey)
+    }
+
+    static func resetProcessedPhotos() {
+        UserDefaults.standard.removeObject(forKey: processedPhotosKey)
+    }
 
     /// Minimum CLIP similarity to any known object category to keep a detection.
     /// 0.20 = only keep things CLIP confidently recognizes as a real object.
@@ -53,8 +76,7 @@ class PhotoLibraryIndexer {
         print("🚀 Starting photo library indexing...")
         let startTime = Date()
 
-        // Pre-compute CLIP object categories for smart filtering
-        await warmUpObjectFilter()
+        // YOLO handles object detection — no CLIP filter needed during scan
 
         // Check photo library permission
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
@@ -78,7 +100,7 @@ class PhotoLibraryIndexer {
         }
 
         let fetchOptions = PHFetchOptions()
-        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
         fetchOptions.fetchLimit = maxPhotosToProcess
         let allPhotos = PHAsset.fetchAssets(with: .image, options: fetchOptions)
 
@@ -88,68 +110,95 @@ class PhotoLibraryIndexer {
             onProgress?("Starting scan...", 0, 0, allPhotos.count)
         }
         
+        // Filter out already-processed photos
+        let alreadyProcessed = Self.getProcessedPhotoIDs()
         var assets: [PHAsset] = []
         allPhotos.enumerateObjects { asset, _, _ in
-            assets.append(asset)
+            if !alreadyProcessed.contains(asset.localIdentifier) {
+                assets.append(asset)
+            }
         }
-        
-        print("📋 Processing \(assets.count) assets...")
-        
+
+        let skipped = allPhotos.count - assets.count
+        if skipped > 0 {
+            print("Skipping \(skipped) already-processed photos")
+        }
+        print("Processing \(assets.count) new photos...")
+
+        if assets.isEmpty {
+            await MainActor.run {
+                onProgress?("All photos already scanned!", 1.0, 0, 0)
+            }
+            // Still run clustering in case previous scan was cancelled before clustering
+            try await createClusters()
+            return
+        }
+
         var processedCount = 0
         var instancesCreated = 0
-        
-        // Get SwiftData context
+        isCancelled = false
+
         let storage = ObjectRecognitionStorage.shared
         let context = storage.context
-        
+
+        let batchSize = 20
         for (index, asset) in assets.enumerated() {
+            if isCancelled {
+                print("Scan cancelled. Saving \(instancesCreated) objects...")
+                try await MainActor.run { try context.save() }
+                break
+            }
+
             do {
-                print("\n--- Photo \(index + 1)/\(assets.count) ---")
                 let instances = try await processPhoto(asset: asset, context: context)
                 instancesCreated += instances.count
                 processedCount += 1
-                
+                Self.markPhotoProcessed(asset.localIdentifier)
+
                 await MainActor.run {
                     let progress = Double(processedCount) / Double(assets.count)
                     self.onProgress?(
-                        "Processing photo \(processedCount) of \(assets.count)...",
+                        "Photo \(processedCount)/\(assets.count) — \(instancesCreated) objects",
                         progress,
                         processedCount,
                         assets.count
                     )
                 }
-                
-                if processedCount % 10 == 0 {
-                    print("📸 Processed \(processedCount)/\(assets.count) photos, \(instancesCreated) instances")
-                    // Save every 10 photos
-                    try context.save()
-                    print("💾 Saved progress to database")
+
+                // Save every batch on main actor
+                if processedCount % batchSize == 0 {
+                    try await MainActor.run { try context.save() }
+                    print("Batch saved: \(processedCount) photos, \(instancesCreated) objects")
                 }
             } catch {
-                print("❌ Error processing photo: \(error)")
+                print("Error processing photo: \(error)")
+                Self.markPhotoProcessed(asset.localIdentifier)
             }
         }
-        
-        // Final save
-        try context.save()
-        print("💾 Final save complete")
 
-        // Verify instances were saved
-        let verifyDescriptor = FetchDescriptor<ObjectInstance>()
-        let savedInstances = (try? context.fetch(verifyDescriptor)) ?? []
-        print("📊 DATABASE CHECK: \(savedInstances.count) total instances in database")
-
+        // Final save on main actor
+        try await MainActor.run { try context.save() }
         let duration = Date().timeIntervalSince(startTime)
-        print("✅ Indexing complete: \(processedCount) photos, \(instancesCreated) instances created in \(String(format: "%.1f", duration))s")
-        
-        await MainActor.run {
-            onProgress?("Creating clusters...", 0.95, processedCount, processedCount)
+        print("Indexing \(isCancelled ? "stopped" : "complete"): \(processedCount) photos, \(instancesCreated) instances in \(String(format: "%.1f", duration))s")
+
+        if isCancelled {
+            // On cancel: save is done, skip clustering — instant stop
+            await MainActor.run {
+                onProgress?("Saved \(instancesCreated) objects", 1.0, processedCount, processedCount)
+            }
+            return
         }
-        
-        try await createClusters()
-        
+
+        // Only cluster on full completion
+        if instancesCreated > 0 {
+            await MainActor.run {
+                onProgress?("Grouping similar objects...", 0.95, processedCount, processedCount)
+            }
+            try await createClusters()
+        }
+
         await MainActor.run {
-            onProgress?("Complete!", 1.0, processedCount, processedCount)
+            onProgress?("Done!", 1.0, processedCount, processedCount)
         }
     }
     
@@ -199,6 +248,7 @@ class PhotoLibraryIndexer {
         var instances: [ObjectInstance] = []
 
         for (index, detection) in yoloDetections.enumerated() {
+            if isCancelled { break }
             print("  [\(index + 1)/\(yoloDetections.count)] \(detection.className) (\(String(format: "%.0f%%", detection.confidence * 100)))")
 
             // Crop directly from YOLO bounding box — clean, tight, fast
@@ -233,9 +283,9 @@ class PhotoLibraryIndexer {
                 CGPoint(x: pixelRect.minX, y: pixelRect.maxY)
             ]
 
-            // Generate embeddings
+            // Generate VNFeaturePrint embedding only — skip MobileCLIP during scan to save memory
+            // CLIP embeddings can be added later via Settings → CLIP Migration
             let embedding = try await embeddingQueue.generateEmbedding(for: segmentedCrop)
-            let clipEmbedding = try? await mobileCLIP.generateImageEmbedding(for: segmentedCrop)
 
             let instance = ObjectInstance(
                 embedding: embedding.vector,
@@ -244,11 +294,12 @@ class PhotoLibraryIndexer {
                 detectionConfidence: detection.confidence,
                 imageQuality: 0.8
             )
-            instance.clipEmbedding = clipEmbedding
             instance._setCropUIImage(segmentedCrop)
             instance.sourceImagePath = saveImageToDocuments(image, assetID: asset.localIdentifier)
 
-            context.insert(instance)
+            await MainActor.run {
+                context.insert(instance)
+            }
             instances.append(instance)
 
             // Notify UI with YOLO class name
@@ -354,44 +405,37 @@ class PhotoLibraryIndexer {
     }
     
     private func createClusters() async throws {
-        print("🔄 Creating clusters...")
-        
-        let storage = ObjectRecognitionStorage.shared
-        let context = storage.context
-        
-        // Fetch all unassigned instances
-        let descriptor = FetchDescriptor<ObjectInstance>(
-            predicate: #Predicate { instance in
-                instance.identity == nil
-            }
-        )
-        let instances = try context.fetch(descriptor)
-        
-        print("📊 Found \(instances.count) unassigned instances")
-        
+        print("Creating clusters...")
+
+        let instances: [ObjectInstance] = try await MainActor.run {
+            let storage = ObjectRecognitionStorage.shared
+            let context = storage.context
+            let descriptor = FetchDescriptor<ObjectInstance>(
+                predicate: #Predicate { instance in
+                    instance.identity == nil
+                }
+            )
+            return try context.fetch(descriptor)
+        }
+
         guard !instances.isEmpty else {
-            print("ℹ️ No instances to cluster")
+            print("No instances to cluster")
             return
         }
-        
+
+        print("Clustering \(instances.count) instances...")
         let clusters = performDBSCANClustering(on: instances)
-        print("✅ Created \(clusters.count) clusters")
-        
-        for cluster in clusters {
-            cluster.selectRepresentative()
-            context.insert(cluster)
-            print("  Cluster: \(cluster.instances.count) instances, representative: \(cluster.representativeInstanceID?.uuidString.prefix(8) ?? "none")")
+        print("Created \(clusters.count) clusters")
+
+        try await MainActor.run {
+            let context = ObjectRecognitionStorage.shared.context
+            for cluster in clusters {
+                cluster.selectRepresentative()
+                context.insert(cluster)
+            }
+            try context.save()
         }
-
-        try context.save()
-        print("💾 Clusters saved to database")
-
-        // Verify clusters were saved
-        let clusterDescriptor = FetchDescriptor<UnlabeledCluster>(
-            predicate: #Predicate { !$0.hasBeenPresented }
-        )
-        let savedClusters = (try? context.fetch(clusterDescriptor)) ?? []
-        print("📊 DATABASE CHECK: \(savedClusters.count) unpresented clusters ready for labeling")
+        print("Clusters saved")
     }
     
     private func performDBSCANClustering(on instances: [ObjectInstance]) -> [UnlabeledCluster] {
@@ -580,19 +624,19 @@ class PhotoLibraryIndexer {
         let options = PHImageRequestOptions()
         options.deliveryMode = .highQualityFormat
         options.isSynchronous = true
-        options.resizeMode = .none
-        options.isNetworkAccessAllowed = true
-        
+        options.resizeMode = .fast
+        options.isNetworkAccessAllowed = false  // Skip iCloud photos to avoid hangs
+
         var resultImage: UIImage?
         PHImageManager.default().requestImage(
             for: asset,
-            targetSize: CGSize(width: 2048, height: 2048),
+            targetSize: CGSize(width: 640, height: 640),
             contentMode: .aspectFit,
             options: options
         ) { image, _ in
             resultImage = image
         }
-        
+
         return resultImage
     }
     

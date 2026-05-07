@@ -165,6 +165,14 @@ class ObjectRecognitionStorage {
     private static let storeName = "ObjectRecognition"
 
     private init() {
+        // Ensure Application Support directory exists
+        let fileManager = FileManager.default
+        if let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+            if !fileManager.fileExists(atPath: appSupport.path) {
+                try? fileManager.createDirectory(at: appSupport, withIntermediateDirectories: true)
+            }
+        }
+
         let schema = Schema([
             ObjectIdentity.self,
             ObjectInstance.self,
@@ -180,16 +188,15 @@ class ObjectRecognitionStorage {
 
         do {
             container = try ModelContainer(for: schema, configurations: [config])
-            print("✅ SwiftData ObjectRecognition container initialized")
+            print("SwiftData container initialized")
         } catch {
-            print("⚠️ SwiftData migration error, resetting database: \(error)")
-            // Delete old database and try again
+            print("SwiftData migration error, resetting: \(error)")
             Self.deleteDatabase()
             do {
                 container = try ModelContainer(for: schema, configurations: [config])
-                print("✅ SwiftData ObjectRecognition container recreated after reset")
+                print("SwiftData container recreated after reset")
             } catch {
-                fatalError("Failed to initialize SwiftData container after reset: \(error)")
+                fatalError("Failed to initialize SwiftData container: \(error)")
             }
         }
     }
@@ -199,7 +206,7 @@ class ObjectRecognitionStorage {
     }
 
     /// Delete the database files to allow schema reset
-    private static func deleteDatabase() {
+    static func deleteDatabase() {
         let fileManager = FileManager.default
         guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             return
@@ -221,10 +228,19 @@ class ObjectRecognitionStorage {
         print("🗑️ Deleted old database files for schema reset")
     }
 
-    /// Manually reset the database (for debugging/settings)
+    /// Mark database for reset on next launch. The actual delete happens at init.
     static func resetDatabase() {
+        UserDefaults.standard.set(true, forKey: "pendingDatabaseReset")
+        PhotoLibraryIndexer.resetProcessedPhotos()
+        print("Database will be reset on next app launch")
+    }
+
+    /// Check and perform pending reset at app start (before singleton init)
+    static func performPendingResetIfNeeded() {
+        guard UserDefaults.standard.bool(forKey: "pendingDatabaseReset") else { return }
+        UserDefaults.standard.set(false, forKey: "pendingDatabaseReset")
         deleteDatabase()
-        print("🔄 Database will be recreated on next app launch")
+        print("Pending database reset performed")
     }
 }
 
