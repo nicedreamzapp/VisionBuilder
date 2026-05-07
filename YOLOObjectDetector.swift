@@ -28,9 +28,9 @@ class YOLOObjectDetector {
     private var isLoaded = false
     private(set) var loadedGeneration: Generation = .v8
 
-    private let confidenceThreshold: Float = 0.25
+    private let confidenceThreshold: Float = 0.10  // was 0.25 — lower = catches more objects
     private let iouThreshold: Float = 0.45
-    private let maxDetections = 5
+    private let maxDetections = 20  // was 5 — handle photos with many objects
     private let inputSize: Int = 640
 
     /// Preferred order: YOLO26 if bundled, else YOLOv8 OIV7.

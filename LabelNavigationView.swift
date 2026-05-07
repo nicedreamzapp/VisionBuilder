@@ -95,7 +95,7 @@ struct LabelNavigationView: View {
     private var headerSection: some View {
         GradientHeaderCard(
             title: "Label Objects",
-            subtitle: "Detect and label objects with SAM 2.1",
+            subtitle: "Tap an object to teach the AI what it is",
             icon: "tag.fill",
             gradient: TabTheme.label.headerGradient
         )
@@ -176,7 +176,9 @@ struct LabelNavigationView: View {
             }
 
             ForEach(sessionManager.recentSessions.filter { $0.isCompleted }.prefix(3)) { session in
-                RecentSessionRow(session: session)
+                RecentSessionRow(session: session) {
+                    sessionManager.deleteSession(session)
+                }
             }
         }
         .padding()
@@ -271,9 +273,10 @@ struct ResumeSessionCard: View {
     let onResume: () -> Void
     let onDelete: () -> Void
 
+    @State private var showingDeleteConfirm = false
+
     var body: some View {
         HStack(spacing: 12) {
-            // Progress indicator
             ZStack {
                 Circle()
                     .stroke(Color.gray.opacity(0.2), lineWidth: 4)
@@ -307,16 +310,31 @@ struct ResumeSessionCard: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
+
+            Button {
+                showingDeleteConfirm = true
+            } label: {
+                Image(systemName: "trash")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Delete session")
         }
         .padding()
         .background(Color.orange.opacity(0.1))
         .cornerRadius(12)
-        .contextMenu {
-            Button(role: .destructive) {
-                onDelete()
-            } label: {
-                Label("Delete Session", systemImage: "trash")
-            }
+        .confirmationDialog(
+            "Delete \"\(session.displayName)\"?",
+            isPresented: $showingDeleteConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) { onDelete() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This session and its progress will be removed. This can't be undone.")
         }
     }
 }
@@ -325,6 +343,9 @@ struct ResumeSessionCard: View {
 
 struct RecentSessionRow: View {
     let session: LabelingSession
+    let onDelete: () -> Void
+
+    @State private var showingDeleteConfirm = false
 
     var body: some View {
         HStack {
@@ -345,6 +366,28 @@ struct RecentSessionRow: View {
             Text(session.lastModifiedAt.formatted(date: .abbreviated, time: .omitted))
                 .font(.caption)
                 .foregroundColor(.secondary)
+
+            Button {
+                showingDeleteConfirm = true
+            } label: {
+                Image(systemName: "trash")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Delete session")
+        }
+        .confirmationDialog(
+            "Delete \"\(session.displayName)\"?",
+            isPresented: $showingDeleteConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) { onDelete() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This labeled session will be removed from your history.")
         }
     }
 }
@@ -476,17 +519,40 @@ struct LabelingFlowView: View {
 
             Spacer()
 
-            // Skip button
-            Button {
-                advanceToNext()
-            } label: {
-                Text("Skip")
-                    .font(.caption)
+            HStack(spacing: 8) {
+                // Back button (only past first image)
+                if currentIndex > 0 {
+                    Button {
+                        currentIndex -= 1
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.headline.bold())
+                            .foregroundColor(.white)
+                            .frame(width: 36, height: 36)
+                            .background(Color.black.opacity(0.5))
+                            .clipShape(Circle())
+                    }
+                }
+
+                // Next / Done — saves progress and advances. Renamed from "Skip"
+                // since it actually saves what you've labeled.
+                Button {
+                    advanceToNext()
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(currentIndex + 1 == images.count ? "Done" : "Next")
+                            .font(.subheadline.bold())
+                        if currentIndex + 1 < images.count {
+                            Image(systemName: "chevron.right")
+                                .font(.caption.bold())
+                        }
+                    }
                     .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.black.opacity(0.5))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Color.appBlue.opacity(0.9))
                     .cornerRadius(20)
+                }
             }
         }
         .padding()
