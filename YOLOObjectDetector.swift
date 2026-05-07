@@ -20,14 +20,24 @@ struct DetectedObject {
 
 class YOLOObjectDetector {
 
+    /// Generation actually loaded; YOLO26 is NMS-free with same tensor layout.
+    enum Generation { case v8, v26 }
+
     private var model: MLModel?
     private var classNames: [String] = []
     private var isLoaded = false
+    private(set) var loadedGeneration: Generation = .v8
 
     private let confidenceThreshold: Float = 0.25
     private let iouThreshold: Float = 0.45
     private let maxDetections = 5
     private let inputSize: Int = 640
+
+    /// Preferred order: YOLO26 if bundled, else YOLOv8 OIV7.
+    private enum ModelNames {
+        static let v26 = "yolo26n"
+        static let v8 = "yolov8n_oiv7"
+    }
 
     func ensureLoaded() async throws {
         guard !isLoaded else { return }
@@ -37,12 +47,14 @@ class YOLOObjectDetector {
             classNames = content.components(separatedBy: "\n").filter { !$0.isEmpty }
         }
 
-        guard let modelURL = Bundle.main.url(forResource: "yolov8n_oiv7", withExtension: "mlmodelc") else {
+        let (modelName, generation) = resolvePreferredModelName()
+        guard let modelURL = Bundle.main.url(forResource: modelName, withExtension: "mlmodelc") else {
             throw YOLOError.modelNotFound
         }
         let config = MLModelConfiguration()
         config.computeUnits = .cpuAndNeuralEngine
         model = try MLModel(contentsOf: modelURL, configuration: config)
+        loadedGeneration = generation
 
         // Log model input spec so we can verify format
         if let desc = model?.modelDescription.inputDescriptionsByName["image"] {
@@ -53,7 +65,15 @@ class YOLOObjectDetector {
         }
 
         isLoaded = true
-        print("YOLO 601-class detector loaded (\(classNames.count) classes)")
+        print("YOLO \(generation == .v26 ? "26" : "v8") loaded (\(classNames.count) classes)")
+    }
+
+    /// YOLO26 if bundled, else fall back to YOLOv8 OIV7.
+    private func resolvePreferredModelName() -> (name: String, gen: Generation) {
+        if Bundle.main.url(forResource: ModelNames.v26, withExtension: "mlmodelc") != nil {
+            return (ModelNames.v26, .v26)
+        }
+        return (ModelNames.v8, .v8)
     }
 
     /// Detect objects in a UIImage.

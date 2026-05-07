@@ -26,10 +26,17 @@ class MobileCLIPService {
 
     // MARK: - Model Names
 
+    /// Preferred order: MobileCLIP 2 if bundled, else fall back to MobileCLIP S0.
+    /// MobileCLIP 2 (Apple, 2025) is a same-architecture, retrained-on-better-data drop-in.
     private enum ModelNames {
-        static let imageEncoder = "mobileclip_s0_image"
-        static let textEncoder = "mobileclip_s0_text"
+        static let v2ImageEncoder = "mobileclip2_s0_image"
+        static let v2TextEncoder = "mobileclip2_s0_text"
+        static let v1ImageEncoder = "mobileclip_s0_image"
+        static let v1TextEncoder = "mobileclip_s0_text"
     }
+
+    /// Reflects which generation actually loaded; useful for telemetry.
+    enum Generation { case v1, v2 }
 
     // MARK: - State
 
@@ -37,30 +44,32 @@ class MobileCLIPService {
     private var textEncoderModel: MLModel?
     private var tokenizer: CLIPTokenizer?
     private var isLoaded = false
+    private(set) var loadedGeneration: Generation = .v1
 
     // MARK: - Initialization
 
     init() {}
 
-    /// Load models lazily on first use
+    /// Load models lazily on first use. Prefers MobileCLIP 2 if its mlpackage is bundled.
     func ensureModelsLoaded() async throws {
         guard !isLoaded else { return }
 
-        print("Loading MobileCLIP-S0 CoreML models...")
-
-        // Load image encoder
-        guard let imageURL = Bundle.main.url(forResource: ModelNames.imageEncoder, withExtension: "mlmodelc") else {
-            throw MobileCLIPError.modelNotFound(ModelNames.imageEncoder)
-        }
         let config = MLModelConfiguration()
         config.computeUnits = .cpuAndNeuralEngine
+
+        let (imageName, textName, generation) = resolvePreferredModelNames()
+        print("Loading MobileCLIP \(generation == .v2 ? "2" : "S0") CoreML models...")
+
+        guard let imageURL = Bundle.main.url(forResource: imageName, withExtension: "mlmodelc") else {
+            throw MobileCLIPError.modelNotFound(imageName)
+        }
         imageEncoderModel = try MLModel(contentsOf: imageURL, configuration: config)
 
-        // Load text encoder
-        guard let textURL = Bundle.main.url(forResource: ModelNames.textEncoder, withExtension: "mlmodelc") else {
-            throw MobileCLIPError.modelNotFound(ModelNames.textEncoder)
+        guard let textURL = Bundle.main.url(forResource: textName, withExtension: "mlmodelc") else {
+            throw MobileCLIPError.modelNotFound(textName)
         }
         textEncoderModel = try MLModel(contentsOf: textURL, configuration: config)
+        loadedGeneration = generation
 
         // Load tokenizer
         guard let vocabURL = Bundle.main.url(forResource: "clip_vocab", withExtension: "json"),
@@ -75,6 +84,16 @@ class MobileCLIPService {
     }
 
     var modelsAreLoaded: Bool { isLoaded }
+
+    /// Picks v2 if bundled (both image + text), otherwise falls back to v1.
+    private func resolvePreferredModelNames() -> (image: String, text: String, gen: Generation) {
+        let v2Image = Bundle.main.url(forResource: ModelNames.v2ImageEncoder, withExtension: "mlmodelc")
+        let v2Text = Bundle.main.url(forResource: ModelNames.v2TextEncoder, withExtension: "mlmodelc")
+        if v2Image != nil && v2Text != nil {
+            return (ModelNames.v2ImageEncoder, ModelNames.v2TextEncoder, .v2)
+        }
+        return (ModelNames.v1ImageEncoder, ModelNames.v1TextEncoder, .v1)
+    }
 
     // MARK: - Image Embedding
 
