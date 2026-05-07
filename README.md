@@ -1,195 +1,294 @@
-<p align="center">
-  <img src="Vision Builder/Assets.xcassets/AppIcon.appiconset/AppIcon1.png" width="120" height="120" alt="Vision Builder Icon">
-</p>
+<div align="center">
 
-<h1 align="center">Vision Builder</h1>
+<img src="Vision Builder/Assets.xcassets/AppIcon.appiconset/AppIcon1.png" width="128" height="128" alt="Vision Builder">
 
-<p align="center">
-  <strong>Train AI to recognize objects in your life — privately, on your device</strong>
-</p>
+# 🪄 Vision Builder
 
-<p align="center">
-  <img src="https://img.shields.io/badge/platform-iOS%2018%2B-blue" alt="Platform">
-  <img src="https://img.shields.io/badge/swift-5.9-orange" alt="Swift">
-  <img src="https://img.shields.io/badge/status-work%20in%20progress-yellow" alt="Status">
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
-</p>
+### **Roboflow on your phone — for training your own robot.**
+
+*Privately. On-device. With photos you already took.*
+
+<br/>
+
+[![Platform](https://img.shields.io/badge/iOS-26%2B-007AFF?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/ios/)
+[![Swift](https://img.shields.io/badge/Swift-5.9-FA7343?style=for-the-badge&logo=swift&logoColor=white)](https://swift.org)
+[![CoreML](https://img.shields.io/badge/CoreML-on--device-5856D6?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/machine-learning/core-ml/)
+[![License](https://img.shields.io/badge/license-MIT-34C759?style=for-the-badge)](LICENSE)
+
+[![Status](https://img.shields.io/badge/status-very%20much%20a%20WIP-FF9500?style=for-the-badge&logo=hammer&logoColor=white)](#-heads-up--nothing-here-is-done)
+[![SAM 2.1](https://img.shields.io/badge/SAM-2.1-FF2D55?style=for-the-badge)](https://ai.meta.com/sam2/)
+[![MobileCLIP 2](https://img.shields.io/badge/MobileCLIP-2-AF52DE?style=for-the-badge&logo=apple)](https://huggingface.co/apple/MobileCLIP2-S0)
+[![YOLO 26](https://img.shields.io/badge/YOLO-26-00C7BE?style=for-the-badge)](https://docs.ultralytics.com/)
+
+</div>
+
+<br/>
+
+> [!WARNING]
+> ## 🚧 Heads up — nothing here is "done"
+>
+> This is an **ongoing project**. Things are half-built. Buttons sometimes lie. Empty states are awkward. The roadmap is longer than the README. We're shipping in the open because the core idea is too good to wait for "done."
+>
+> **If you find rough edges — that's the point.** Tell us. Or fix it. PRs welcome.
+
+<br/>
 
 ---
 
-> **⚠️ Work in Progress**
-> This project is actively being developed. Features may be incomplete, and things might break. We're building this in the open and welcome feedback!
+## ✨ The vision (what "finished" actually looks like)
 
----
+Imagine you just bought a robot. Or you're building one. It needs to recognize **your** stuff — your kitchen, your tools, your kid's toys, the specific objects in your house. Not generic ImageNet "person / car / dog." ***Your*** specific stuff.
 
-## What is Vision Builder?
+The classical pipeline goes something like this:
 
-Vision Builder is an iOS app that helps you create personalized object recognition datasets from your own photos — completely on-device, with no data leaving your phone.
-
-**The idea is simple:** Your phone already has thousands of photos of the objects in your life — your coffee mug, your car keys, your dog. Why not use those photos to teach AI what *your* specific objects look like?
-
-### How It Works
-
+```diff
+- 1. Photograph thousands of objects from every angle
+- 2. Upload to Roboflow / V7 / Scale AI
+- 3. Pay someone to draw bounding boxes for weeks
+- 4. Wait
+- 5. Pay more
+- 6. Train a model
+- 7. Deploy
 ```
-📸 Scan Photo Library → 🔍 AI Finds Objects → 📦 Groups Similar Items → 🏷️ You Label Once → ✨ AI Learns
+
+```diff
++ Vision Builder collapses steps 1–5 into:
++ "Open the app. Walk around your house. Done."
 ```
 
-1. **Scan** — The app scans your photo library using SAM2 (Segment Anything Model 2) to find and segment individual objects
-2. **Cluster** — Similar objects are automatically grouped together using embedding similarity
-3. **Label** — You review clusters and label them with a single tap ("Coffee Mug", "Car Keys", etc.)
-4. **Learn** — The app learns from your labels and can auto-label similar objects it finds later
+When this thing is "done" (it never will be — software is forever), here's what it'll do:
 
-### Why On-Device?
+| Step | What happens |
+| --- | --- |
+| 📸 **Capture** | Take photos, or aim at your existing library — your phone already has thousands of pictures of your life |
+| ✂️ **Auto-segment** | SAM 2 (or 3, when Apple ships it) cuts every object out of every photo, automatically |
+| 🧠 **Auto-cluster** | MobileCLIP 2 fingerprints each cut-out and groups them by visual similarity — *"hey, here are 14 photos of what looks like the same coffee mug"* |
+| 🏷️ **Label once** | You tap one cluster, type "coffee mug," and **all 14 instances inherit that label**. Big-batch instead of one-photo-at-a-time grinding |
+| 🤖 **Export** | Spit out a clean labeled dataset in **COCO JSON, YOLO TXT, or CSV**. Drop it straight into your model training pipeline |
+| 🔒 **Stay private** | Nothing leaves the device. No cloud. No upload. No "free tier." Your photos, your data, your dataset |
 
-- **Privacy** — Your photos never leave your device
-- **Speed** — No network latency, instant results
-- **Ownership** — Your dataset belongs to you
+The end state is a tool you walk around your space with for an afternoon and walk away with a personalized object-detection dataset ready to train a model that actually knows your world.
 
----
-
-## Features
-
-### 🎯 SAM2 Segmentation
-State-of-the-art object segmentation powered by Meta's Segment Anything Model 2, running entirely on-device via CoreML.
-
-### 🧠 Active Learning
-Smart clustering groups similar objects together. Label one example, and the app learns to recognize the rest.
-
-### 📊 Batch Review Interface
-Review entire clusters of objects at once — see 20 similar items in a grid, type a label once, done.
-
-### 📁 Dataset Export
-Export your labeled dataset in standard formats (COCO JSON, CSV) for use in other ML projects.
-
-### 🎨 Beautiful UI
-Native SwiftUI interface with smooth animations, haptic feedback, and dark mode support.
+<br/>
 
 ---
 
-## Screenshots
+## 🤔 Why we're building it
 
-*Coming soon — we're still polishing the UI!*
+> Because every "AI for robotics" tutorial assumes you have a labeling team.
+>
+> Most people don't. They have a phone and 15 minutes between things.
 
----
+> Because Roboflow is great, but uploading 4,000 photos of your living room to a cloud service feels insane.
 
-## Tech Stack
+> Because the iPhone Neural Engine is faster than most cloud GPUs were five years ago, and it's just **sitting in your pocket.**
 
-| Component | Technology |
-|-----------|------------|
-| **UI Framework** | SwiftUI |
-| **Data Persistence** | SwiftData |
-| **Object Segmentation** | SAM2 (CoreML) |
-| **Embeddings** | Vision Framework |
-| **Clustering** | DBSCAN Algorithm |
-| **Image Processing** | CoreImage, CoreGraphics |
+> Because the future of robots learning to operate in *your* environment shouldn't require a SaaS subscription.
+
+<br/>
 
 ---
 
-## Requirements
+## ⚙️ How it works (today)
 
-- iOS 18.0+
-- iPhone with A14 chip or later (for Neural Engine)
-- Xcode 15.0+
+```mermaid
+flowchart LR
+    A[📸 Photo Library] -->|scan| B[✂️ SAM 2.1<br/>segment objects]
+    B --> C[🧠 MobileCLIP 2<br/>embed each crop]
+    C --> D[📊 DBSCAN<br/>cluster similar]
+    D --> E[🏷️ Inbox<br/>label once per cluster]
+    E --> F[🤖 Export<br/>COCO / YOLO / CSV]
+    F --> G[🦾 Train your robot]
+
+    style A fill:#FF9500,stroke:#fff,color:#fff
+    style B fill:#FF2D55,stroke:#fff,color:#fff
+    style C fill:#AF52DE,stroke:#fff,color:#fff
+    style D fill:#5856D6,stroke:#fff,color:#fff
+    style E fill:#007AFF,stroke:#fff,color:#fff
+    style F fill:#34C759,stroke:#fff,color:#fff
+    style G fill:#00C7BE,stroke:#fff,color:#fff
+```
+
+<br/>
 
 ---
 
-## Getting Started
+## 📦 What's actually working right now
+
+> [!NOTE]
+> Status legend — ✅ working · 🟡 functional but rough · 💤 scaffolded, dormant · ❌ not yet
+
+| Component | Status | Notes |
+| :--- | :---: | :--- |
+| SAM 2.1 segmentation | ✅ | Solid, runs on Neural Engine |
+| MobileCLIP 2 embeddings | ✅ | Just upgraded from v1 — sharper clusters |
+| YOLO 26 detection | ✅ | NMS-free, COCO 80 classes |
+| DBSCAN clustering | ✅ | Cosine distance on embeddings |
+| Photo library scan | ✅ | Working but slow on big libraries |
+| Inbox cluster review | 🟡 | Functional, UX still rough |
+| Manual labeling flow | 🟡 | Has back/next now, editor is busy |
+| Concept search | 🟡 | "Find all my cups" — works, sometimes underwhelming |
+| COCO / CSV export | ✅ | Ready for any standard pipeline |
+| Foundation Models smart-naming | 💤 | Scaffolded — needs A17 Pro+ device |
+| SAM 3 text-prompted segmentation | 💤 | Skeleton ready — waiting on Meta CoreML |
+| iCloud sync | ❌ | On the list |
+| Apple Watch quick-label | ❌ | On the list |
+| Siri Shortcuts | ❌ | On the list |
+
+<br/>
+
+---
+
+## 🛠️ Tech stack
+
+<table>
+<tr>
+<td>
+
+**Framework layer**
+- 🎨 SwiftUI
+- 💾 SwiftData
+- 🖼️ CoreImage / Vision
+
+</td>
+<td>
+
+**ML layer**
+- ✂️ SAM 2.1 (CoreML)
+- 🧠 MobileCLIP 2 (Apple)
+- 🎯 YOLO 26 (Ultralytics)
+- 📊 DBSCAN
+
+</td>
+<td>
+
+**Apple Intelligence**
+- 🤖 Foundation Models
+- ⚡ Neural Engine
+- 🔒 100% on-device
+
+</td>
+</tr>
+</table>
+
+<br/>
+
+---
+
+## 🧰 Requirements
+
+> [!IMPORTANT]
+> - **iOS 26.0+** (Foundation Models APIs + iOS 26 SwiftUI bits)
+> - **iPhone with A14 chip or later** for Neural Engine acceleration
+> - **Apple Intelligence device (iPhone 15 Pro+)** *only* for the on-device LLM cluster-naming — everything else runs on older iPhones
+> - **Xcode 15+** to build
+
+<br/>
+
+---
+
+## 🚀 Build it yourself
 
 ```bash
-# Clone the repository
 git clone https://github.com/nicedreamzapp/VisionBuilder.git
-
-# Open in Xcode
 cd VisionBuilder
+
+# Generate the upgraded mlpackages (MobileCLIP 2 + YOLO 26)
+# Takes ~5 min on Apple Silicon
+bash scripts/convert_models.sh all
+
+# Open in Xcode and build to a real device
+# (Simulator works but it's slow — no Neural Engine)
 open "Vision Builder.xcodeproj"
-
-# Build and run on your device
-# (Simulator works but SAM2 runs slower without Neural Engine)
 ```
 
-### First Run
+> [!TIP]
+> The conversion script auto-creates a Python 3.12 venv (coremltools 8 hates Python 3.14), patches a known coremltools bug for newer numpy, and produces:
+> - `mobileclip2_s0_image.mlpackage` (22 MB)
+> - `mobileclip2_s0_text.mlpackage` (121 MB)
+> - `yolo26n.mlpackage` (4.8 MB)
+>
+> These are gitignored — too big for GitHub's 100MB file limit, but reproducibly regenerated by the script.
 
-1. Grant photo library access when prompted
-2. Go to the **Dataset** tab
-3. Tap **"Scan Photo Library"**
-4. Wait for the scan to complete (this may take a few minutes)
-5. Go to the **Inbox** tab to review and label discovered objects
+<br/>
 
 ---
 
-## Project Structure
+## 🎬 First-run flow
 
 ```
-Vision Builder/
-├── Models/
-│   ├── ObjectIdentity.swift      # Core data models
-│   ├── LabelingSession.swift     # Session persistence
-│   └── CoreTypes.swift           # Shared types
-├── Views/
-│   ├── MorningInboxView.swift    # Batch review interface
-│   ├── DatasetTabView.swift      # Dataset browser
-│   ├── LabelingEditorView.swift  # Manual labeling
-│   └── DesignSystem.swift        # UI components
-├── Services/
-│   ├── SAM2CoreMLProcessor.swift # SAM2 integration
-│   ├── EmbeddingService.swift    # Feature extraction
-│   ├── PhotoLibraryIndexer.swift # Photo scanning
-│   └── SimilaritySearchService.swift
-├── Controllers/
-│   ├── ActiveLearningController.swift
-│   └── ActiveLearningManager.swift
-└── Resources/
-    ├── SAM2_1SmallImageEncoderFLOAT16.mlpackage
-    ├── SAM2_1SmallMaskDecoderFLOAT16.mlpackage
-    └── SAM2_1SmallPromptEncoderFLOAT16.mlpackage
+1. Grant photo library access
+2. Dataset tab → "Scan Photo Library"
+3. Wait — you'll see objects fly by in the live feed
+4. Inbox tab → label each cluster (one tap per cluster of N similar objects)
+5. Dataset tab → menu → "Export All" → COCO/YOLO/CSV
+6. Feed the dataset into your training pipeline
+7. Train. Deploy. Profit. (lol, jk, you'll iterate forever)
 ```
 
----
-
-## Roadmap
-
-We're actively working on this project. Here's what's on our radar:
-
-- [ ] **Performance** — Optimize SAM2 inference speed
-- [ ] **Accuracy** — Improve clustering quality
-- [ ] **Export** — More export format options
-- [ ] **Sync** — iCloud sync for datasets
-- [ ] **Watch** — Apple Watch companion for quick labeling
-- [ ] **Widgets** — Home screen widgets showing labeling progress
-- [ ] **Shortcuts** — Siri Shortcuts integration
+<br/>
 
 ---
 
-## Contributing
+## 🗺️ Roadmap
 
-We'd love your help! This project is in early stages and there's plenty to do.
+> [!NOTE]
+> Rough priority order. Subject to change every time we open the app and trip over a bug.
 
-- **Found a bug?** Open an issue
-- **Have an idea?** Start a discussion
-- **Want to contribute code?** PRs welcome!
+- [ ] Make the **Inbox flow buttery** — it's the heart of the app
+- [ ] Better **SAM 3** integration when Meta ships CoreML
+- [ ] **iCloud sync** so you can label across iPhone + iPad
+- [ ] **Apple Watch** companion for "label this object" in the wild
+- [ ] **Siri Shortcuts** ("scan my latest 100 photos")
+- [ ] **On-device YOLO finetuning** — start with COCO, finetune to your dataset right on the phone
+- [ ] **Multi-project support** — one dataset for kitchen, another for shop, another for the robot's path
+- [ ] **Smarter cluster auto-naming** with Foundation Models when device supports
+- [ ] **Collaborative datasets** without cloud — maybe AirDrop the `.mlpackage`?
+- [ ] **Robot-specific export presets** — URDF-aware? object pose? still scoping
 
-Please be patient with us — we're a small team learning as we go.
-
----
-
-## Acknowledgments
-
-- **Meta AI** for the incredible [Segment Anything Model 2](https://github.com/facebookresearch/segment-anything-2)
-- **Apple** for SwiftUI, CoreML, and the Vision framework
-- The open source community for inspiration and guidance
-
----
-
-## License
-
-MIT License — see [LICENSE](LICENSE) for details.
+<br/>
 
 ---
 
-<p align="center">
-  <sub>Built with ❤️ by humans who believe AI should work for you, privately.</sub>
-</p>
+## 🙋 Contributing
 
-<p align="center">
-  <sub>⭐ Star us on GitHub if you find this interesting!</sub>
-</p>
+> Genuinely, please.
+
+| If you... | Do this |
+| --- | --- |
+| Found a 🐛 bug | Open an issue — even rough notes help |
+| Have a 💡 idea | Start a discussion |
+| Want to 🔧 code | PRs welcome — file structure is mostly self-explanatory, see `CLAUDE.md` |
+
+We're a small team learning as we go. If you're a **robotics person** with opinions about training-data formats, an **iOS dev** who's done CoreML in anger, or just someone who's tried to **label 400 photos of their dog** and hated it — you'd add value here.
+
+<br/>
+
+---
+
+## 🙏 Acknowledgments
+
+| Who | What for |
+| --- | --- |
+| 🦾 [Meta AI](https://ai.meta.com/) | SAM 2 (and SAM 3) — segmenting anything is wild |
+| 🍎 [Apple ML Research](https://machinelearning.apple.com/) | MobileCLIP 2 + FastVLM — vision-language tiny enough for a phone |
+| 🚀 [Ultralytics](https://ultralytics.com/) | YOLO 26 + actually shipping CoreML exports |
+| 🤖 [Roboflow](https://roboflow.com/) / Scale AI / V7 | Showing what good labeling tools look like, even if we do it on-device instead |
+
+<br/>
+
+---
+
+## 📜 License
+
+**MIT.** Do what you want with it. If you build something cool, tell us — we want to see the robot.
+
+<br/>
+
+<div align="center">
+
+<sub>Built with ❤️ + 🤖 + a healthy distrust of cloud services.</sub>
+
+<sub>⭐ Star us on GitHub if you want to follow along — this is going to get fun.</sub>
+
+</div>
