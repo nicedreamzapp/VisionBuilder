@@ -61,26 +61,9 @@ struct MorningInboxView: View {
                     }
                 }
             }
-            .navigationTitle("Label Objects")
+            .navigationTitle("Inbox")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button(role: .destructive) {
-                            showingDeleteAllAlert = true
-                        } label: {
-                            Label("Delete All Clusters", systemImage: "trash.fill")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
-                }
-            }
+            .toolbar { inboxTrailingMenu }
             .sheet(isPresented: $showingConfirmation) {
                 ConfirmationView(
                     seedLabel: confirmationLabel,
@@ -134,6 +117,32 @@ struct MorningInboxView: View {
         }
     }
 
+    // MARK: - Toolbar
+
+    @ToolbarContentBuilder
+    private var inboxTrailingMenu: some ToolbarContent {
+        // Only surface "Delete All" when there are clusters to act on.
+        let hasActiveCluster: Bool = {
+            switch controller.state {
+            case .labelingObject, .confirmingMatches: return true
+            default: return false
+            }
+        }()
+        if hasActiveCluster {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    Button(role: .destructive) {
+                        showingDeleteAllAlert = true
+                    } label: {
+                        Label("Delete All Clusters", systemImage: "trash.fill")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+    }
+
     // MARK: - Progress Header
 
     private var clusterProgressHeader: some View {
@@ -157,10 +166,6 @@ struct MorningInboxView: View {
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
-                    } else {
-                        Text("No clusters to review")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
                     }
                 }
 
@@ -249,41 +254,30 @@ struct MorningInboxView: View {
                     }
                 }
 
-                // Label input
+                // Label input — submit via return key OR the "Label All" button below.
+                TextField("What are these objects?", text: $labelText)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.body)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.words)
+                    .submitLabel(.done)
+                    .onSubmit { saveLabel() }
+
+                // Three distinct actions: destroy / skip / label.
+                // Delete is a small icon (low visual weight, destructive),
+                // Skip is bordered (neutral), Label All is the prominent primary.
                 HStack(spacing: 12) {
-                    TextField("What are these objects?", text: $labelText)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.body)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.words)
-                        .submitLabel(.done)
-                        .onSubmit { saveLabel() }
-
-                    Button {
-                        saveLabel()
-                    } label: {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(labelText.isEmpty ? .gray : .appGreen)
-                    }
-                    .disabled(labelText.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-
-                // Action buttons
-                HStack(spacing: 16) {
-                    // Delete button
                     Button {
                         showingDeleteAlert = true
                     } label: {
-                        Label("Delete", systemImage: "trash")
-                            .font(.subheadline)
+                        Image(systemName: "trash")
+                            .font(.title3)
+                            .foregroundColor(.red)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
-                    .buttonStyle(.bordered)
-                    .tint(.red)
+                    .accessibilityLabel("Delete cluster")
 
-                    Spacer()
-
-                    // Skip button - goes to NEXT cluster
                     Button {
                         Task {
                             labelText = ""
@@ -291,17 +285,18 @@ struct MorningInboxView: View {
                             await controller.moveToNextCluster()
                         }
                     } label: {
-                        Label("Skip", systemImage: "forward.fill")
+                        Text("Skip")
                             .font(.subheadline)
+                            .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
 
-                    // Label all button
                     Button {
                         saveLabel()
                     } label: {
                         Label("Label All", systemImage: "tag.fill")
                             .font(.subheadline.bold())
+                            .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.appOrange)
@@ -433,31 +428,38 @@ struct MorningInboxView: View {
     }
 
     private var completeView: some View {
-        VStack(spacing: 24) {
+        let progress = controller.getProgress()
+        let labeled = progress.labeled
+        let didLabelAnything = labeled > 0
+
+        return VStack(spacing: 24) {
             ZStack {
                 Circle()
                     .fill(LinearGradient(colors: [.appGreen.opacity(0.3), .appTeal.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
                     .frame(width: 100, height: 100)
 
-                Image(systemName: "checkmark.circle.fill")
+                Image(systemName: didLabelAnything ? "checkmark.circle.fill" : "tray")
                     .font(.system(size: 50))
                     .foregroundStyle(LinearGradient(colors: [.appGreen, .appTeal], startPoint: .topLeading, endPoint: .bottomTrailing))
             }
 
             VStack(spacing: 8) {
-                Text("All Done!")
+                Text(didLabelAnything ? "All Done!" : "Inbox is Empty")
                     .font(.largeTitle.bold())
 
-                let progress = controller.getProgress()
-                Text("Labeled \(progress.labeled) clusters")
+                Text(didLabelAnything
+                     ? "Labeled \(labeled) cluster\(labeled == 1 ? "" : "s")"
+                     : "Scan your photo library from the Dataset tab to discover objects to label.")
                     .font(.title3)
                     .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
             }
 
             Button {
-                dismiss()
+                NotificationCenter.default.post(name: .switchToDatasetTab, object: nil)
             } label: {
-                Text("Done")
+                Label(didLabelAnything ? "Back to Dataset" : "Go Scan Photos", systemImage: "folder.fill")
                     .frame(maxWidth: 200)
             }
             .buttonStyle(.borderedProminent)

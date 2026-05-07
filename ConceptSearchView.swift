@@ -14,6 +14,7 @@ struct ConceptSearchView: View {
     @State private var suggestions: [String] = []
     @State private var selectedResults: Set<UUID> = []
     @State private var showingLabelSheet = false
+    @State private var showingDeleteConfirm = false
     @State private var labelText = ""
     @Environment(\.dismiss) private var dismiss
 
@@ -49,9 +50,21 @@ struct ConceptSearchView: View {
                 }
                 if !selectedResults.isEmpty {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Label (\(selectedResults.count))") {
-                            labelText = queryText
-                            showingLabelSheet = true
+                        Menu {
+                            Button {
+                                labelText = queryText
+                                showingLabelSheet = true
+                            } label: {
+                                Label("Label (\(selectedResults.count))", systemImage: "tag.fill")
+                            }
+                            Button(role: .destructive) {
+                                showingDeleteConfirm = true
+                            } label: {
+                                Label("Delete (\(selectedResults.count))", systemImage: "trash")
+                            }
+                        } label: {
+                            Text("\(selectedResults.count) selected")
+                                .font(.subheadline.bold())
                         }
                     }
                 }
@@ -62,6 +75,29 @@ struct ConceptSearchView: View {
             .sheet(isPresented: $showingLabelSheet) {
                 labelSheet
             }
+            .confirmationDialog(
+                "Delete \(selectedResults.count) object\(selectedResults.count == 1 ? "" : "s")?",
+                isPresented: $showingDeleteConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) { deleteSelected() }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Removes them from your dataset. This can't be undone.")
+            }
+        }
+    }
+
+    private func deleteSelected() {
+        let ids = Array(selectedResults)
+        let count = ids.count
+        Task {
+            let engine = recognitionEngine ?? ObjectRecognitionEngine()
+            try? await engine.deleteInstances(ids: ids)
+            // Drop the deleted ids from results so the grid updates without re-querying.
+            searchService.results.removeAll { ids.contains($0.id) }
+            selectedResults.removeAll()
+            ToastManager.shared.showSuccess("Deleted \(count) object\(count == 1 ? "" : "s")")
         }
     }
 

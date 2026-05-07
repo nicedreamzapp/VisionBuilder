@@ -628,6 +628,21 @@ class ObjectRecognitionEngine {
         print("✅ Applied label '\(label)' to \(addedCount) instances")
     }
 
+    /// Delete multiple object instances by ID. Used by concept search bulk-cleanup.
+    func deleteInstances(ids: [UUID]) async throws {
+        let context = storage.context
+        let descriptor = FetchDescriptor<ObjectInstance>()
+        let allInstances = try context.fetch(descriptor)
+        let idSet = Set(ids)
+        var removed = 0
+        for instance in allInstances where idSet.contains(instance.id) {
+            context.delete(instance)
+            removed += 1
+        }
+        try context.save()
+        print("🗑️ Deleted \(removed) instances")
+    }
+
     /// Mark a cluster as presented to the user
     func markClusterAsPresented(clusterID: UUID, label: String?) async throws {
         let context = storage.context

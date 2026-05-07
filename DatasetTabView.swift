@@ -43,11 +43,13 @@ struct DatasetTabView: View {
             ZStack {
                 if datasetManager.isLoading {
                     loadingView
-                } else if isIndexing {
+                } else if isIndexing && datasetManager.labelFolders.isEmpty {
+                    // First-time scan with no existing data — give the full live feed.
                     scanningView
                 } else if datasetManager.labelFolders.isEmpty {
                     emptyStateView
                 } else {
+                    // Re-scans show the inline progress card from datasetContentView.
                     datasetContentView
                 }
             }
