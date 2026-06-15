@@ -15,6 +15,10 @@ class ActiveLearningController {
     var currentCluster: UnlabeledCluster?
     var state: WorkflowState = .idle
     var currentSuggestions: [AutoLabelService.LabelSuggestion] = []
+    /// A clean canonical name for the current cluster from the on-device LLM
+    /// (iOS 26 Foundation Models). nil until it resolves, or on devices without
+    /// Apple Intelligence. The Inbox pre-fills the label field with it.
+    var smartName: String?
     private var allInstances: [ObjectInstance] = []
     private let autoLabelService = AutoLabelService()
     
@@ -69,14 +73,36 @@ class ActiveLearningController {
     
     func moveToNextCluster() async {
         currentSuggestions = []
+        smartName = nil
         if let nextCluster = unlabeledClusters.first(where: { !$0.hasBeenPresented }) {
             currentCluster = nextCluster
             currentSuggestions = autoLabelService.suggestLabels(for: nextCluster)
             state = .labelingObject(nextCluster.id)
+            requestSmartName(for: nextCluster)
         } else {
             currentCluster = nil
             currentSuggestions = []
             state = .complete
+        }
+    }
+
+    /// Ask the on-device LLM for one clean name, off the hot path. Non-blocking:
+    /// labeling never waits on it, and it no-ops without Apple Intelligence.
+    private func requestSmartName(for cluster: UnlabeledCluster) {
+        let labels = currentSuggestions.map(\.label)
+        guard !labels.isEmpty else { return }
+        let size = cluster.instances.count
+        let clusterID = cluster.id
+        Task { [weak self] in
+            let name = try? await FoundationModelsClusterNamer.shared
+                .suggestClusterName(sampleLabels: labels, count: size)
+            guard let self, let name, !name.isEmpty else { return }
+            await MainActor.run {
+                // Only apply if we're still on the same cluster.
+                if self.currentCluster?.id == clusterID {
+                    self.smartName = name
+                }
+            }
         }
     }
     

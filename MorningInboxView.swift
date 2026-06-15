@@ -127,6 +127,13 @@ struct MorningInboxView: View {
                 labelFieldFocused = true
             }
         }
+        .onChange(of: controller.smartName) { _, newName in
+            // On-device LLM proposed a name — pre-fill it so you just hit return.
+            // Never clobber what you're already typing.
+            if let newName, labelText.isEmpty {
+                labelText = newName
+            }
+        }
     }
 
     // MARK: - Toolbar
