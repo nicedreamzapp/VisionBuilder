@@ -181,7 +181,11 @@ struct MorningInboxView: View {
                             )
 
                         if let cluster = controller.currentCluster {
-                            Text("\(cluster.instances.count) similar objects")
+                            let depths = cluster.instances.compactMap { $0.depthMeters }
+                            let avgDepth = depths.isEmpty ? nil : depths.reduce(0, +) / Double(depths.count)
+                            Text(avgDepth == nil
+                                 ? "\(cluster.instances.count) similar objects"
+                                 : String(format: "%d similar objects · ~%.1fm away", cluster.instances.count, avgDepth!))
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
@@ -385,6 +389,20 @@ struct MorningInboxView: View {
                         Image(systemName: "photo")
                             .foregroundColor(.gray)
                     }
+            }
+        }
+        // Distance badge — shows only on objects that came from a depth-tagged
+        // (Portrait/LiDAR) photo, so you can see the free 3D labels landing.
+        .overlay(alignment: .bottomTrailing) {
+            if let depth = instance.depthMeters {
+                Label(String(format: "%.1fm", depth), systemImage: "ruler")
+                    .labelStyle(.titleAndIcon)
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(.black.opacity(0.6), in: Capsule())
+                    .padding(4)
             }
         }
     }
