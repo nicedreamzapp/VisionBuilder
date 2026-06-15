@@ -19,6 +19,10 @@ struct MorningInboxView: View {
     @State private var showingDeleteAllAlert: Bool = false
     @State private var isLoading: Bool = true
 
+    // Keeps the keyboard up and the label field focused as you fly through
+    // clusters — no tap-to-focus per cluster.
+    @FocusState private var labelFieldFocused: Bool
+
     @Environment(\.dismiss) private var dismiss
 
     private let recognitionEngine: ObjectRecognitionEngine
@@ -104,6 +108,7 @@ struct MorningInboxView: View {
             // Load images for first cluster
             if let cluster = controller.currentCluster {
                 await loadClusterImages(cluster)
+                labelFieldFocused = true
             }
         }
         .onChange(of: controller.state) { _, newState in
@@ -113,6 +118,9 @@ struct MorningInboxView: View {
             // Load images when cluster changes
             if let cluster = controller.currentCluster {
                 Task { await loadClusterImages(cluster) }
+                // Keep the keyboard up and refocus for the next cluster so
+                // labeling is type → return → type → return, no tapping.
+                labelFieldFocused = true
             }
         }
     }
@@ -260,7 +268,8 @@ struct MorningInboxView: View {
                     .font(.body)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.words)
-                    .submitLabel(.done)
+                    .submitLabel(.next)
+                    .focused($labelFieldFocused)
                     .onSubmit { saveLabel() }
 
                 // Three distinct actions: destroy / skip / label.
@@ -282,7 +291,9 @@ struct MorningInboxView: View {
                         Task {
                             labelText = ""
                             clusterImages = [:]
-                            await controller.moveToNextCluster()
+                            // Must mark the cluster presented, otherwise the same
+                            // cluster is re-selected and Skip does nothing.
+                            await controller.skipCurrentCluster()
                         }
                     } label: {
                         Text("Skip")
