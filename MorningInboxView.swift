@@ -32,6 +32,10 @@ struct MorningInboxView: View {
         GridItem(.adaptive(minimum: 80, maximum: 120), spacing: 8)
     ]
 
+    // Cap how many thumbnails we render/load per cluster. Labeling still applies
+    // to every instance — this is only how many previews we show.
+    private let maxThumbnails = 50
+
     init(recognitionEngine: ObjectRecognitionEngine) {
         self.recognitionEngine = recognitionEngine
         _controller = State(initialValue: ActiveLearningController(recognitionEngine: recognitionEngine))
@@ -223,11 +227,33 @@ struct MorningInboxView: View {
 
     private func clusterReviewView(cluster: UnlabeledCluster) -> some View {
         VStack(spacing: 0) {
-            // Thumbnail grid
+            // Thumbnail grid — render only the instances we actually load a
+            // preview for, plus a "+N more" tile so large clusters read as
+            // intentional, not broken.
+            let shownInstances = Array(cluster.instances.prefix(maxThumbnails))
+            let hiddenCount = cluster.instances.count - shownInstances.count
             ScrollView {
+                if cluster.instances.count > maxThumbnails {
+                    Text("Showing \(shownInstances.count) of \(cluster.instances.count) — your label applies to all")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                        .padding(.top, 12)
+                }
                 LazyVGrid(columns: columns, spacing: 8) {
-                    ForEach(cluster.instances, id: \.id) { instance in
+                    ForEach(shownInstances, id: \.id) { instance in
                         thumbnailView(for: instance)
+                    }
+                    if hiddenCount > 0 {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.appOrange.opacity(0.12))
+                            .frame(width: 80, height: 80)
+                            .overlay {
+                                Text("+\(hiddenCount)")
+                                    .font(.headline)
+                                    .foregroundColor(.appOrange)
+                            }
                     }
                 }
                 .padding()
@@ -241,10 +267,16 @@ struct MorningInboxView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             ForEach(controller.currentSuggestions) { suggestion in
+                                // One tap on a suggestion labels the whole cluster
+                                // and advances — the fast path. Type in the field
+                                // below only when no suggestion fits.
                                 Button {
                                     labelText = suggestion.label
+                                    saveLabel()
                                 } label: {
                                     HStack(spacing: 4) {
+                                        Image(systemName: "tag.fill")
+                                            .font(.caption2)
                                         Text(suggestion.label)
                                             .font(.subheadline)
                                         Text(String(format: "%.0f%%", suggestion.confidence * 100))
@@ -253,7 +285,7 @@ struct MorningInboxView: View {
                                     }
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
-                                    .background(Color(.systemGray5))
+                                    .background(Color.appOrange.opacity(0.15))
                                     .cornerRadius(16)
                                 }
                                 .buttonStyle(.plain)
@@ -531,8 +563,9 @@ struct MorningInboxView: View {
         isLoadingImages = true
         var loadedImages: [UUID: UIImage] = [:]
 
-        // Load images for all instances in parallel (limit to first 50 for performance)
-        let instancesToLoad = Array(cluster.instances.prefix(50))
+        // Load images for all instances in parallel (capped for performance —
+        // matches the number of thumbnails the grid renders)
+        let instancesToLoad = Array(cluster.instances.prefix(maxThumbnails))
 
         await withTaskGroup(of: (UUID, UIImage?).self) { group in
             for instance in instancesToLoad {
