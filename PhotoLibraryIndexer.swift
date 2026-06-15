@@ -247,6 +247,10 @@ class PhotoLibraryIndexer {
         let imageHeight = image.size.height
         var instances: [ObjectInstance] = []
 
+        // Free depth: Portrait/depth-tagged photos carry a depth map we can sample
+        // per object. Returns nil fast for ordinary photos (no extra fetch).
+        let depthData = await PhotoDepthExtractor.loadDepthData(for: asset)
+
         for (index, detection) in yoloDetections.enumerated() {
             if isCancelled { break }
             print("  [\(index + 1)/\(yoloDetections.count)] \(detection.className) (\(String(format: "%.0f%%", detection.confidence * 100)))")
@@ -296,6 +300,14 @@ class PhotoLibraryIndexer {
             )
             instance._setCropUIImage(segmentedCrop)
             instance.sourceImagePath = saveImageToDocuments(image, assetID: asset.localIdentifier)
+
+            // Sample depth at the object's center (normalized YOLO coords).
+            if let depthData {
+                instance.depthMeters = PhotoDepthExtractor.depthMeters(
+                    atNormalizedPoint: CGPoint(x: detection.rect.midX, y: detection.rect.midY),
+                    in: depthData
+                )
+            }
 
             await MainActor.run {
                 context.insert(instance)

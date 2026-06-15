@@ -12,6 +12,7 @@ TARGET_NAME = 'Vision Builder'
 SWIFT_FILES = %w[
   SAM3ConceptService.swift
   FoundationModelsClusterNamer.swift
+  PhotoDepthExtractor.swift
 ]
 
 # .mlpackage are directories — added as folder references and bundled as resources.

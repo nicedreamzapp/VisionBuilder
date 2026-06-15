@@ -63,6 +63,7 @@
 		AE980E2E27FDE14EBF8D5B1B /* mobileclip2_s0_text.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 5096AA41CADA5DA3D8855722 /* mobileclip2_s0_text.mlpackage */; };
 		B6F90EB82034892736E8C016 /* yolo26_class_names.txt in Resources */ = {isa = PBXBuildFile; fileRef = F23B54B3B5F1830EAB086B1F /* yolo26_class_names.txt */; };
 		BB15B3A834247C97705D37F3 /* MobileCLIPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97DBAD25E133E86AFE360818 /* MobileCLIPService.swift */; };
+		C7FA2997FD3FA0E8EDDEA178 /* PhotoDepthExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C0CBDBC1379701F306A1B50 /* PhotoDepthExtractor.swift */; };
 		CB9D56D7C7A5EBA235E40110 /* UpgradePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B124D68CB2958FC59F9E5939 /* UpgradePromptView.swift */; };
 		D2BB38E274657723531D91E1 /* YOLOObjectDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2269046C585E9B5FC4A3A99 /* YOLOObjectDetector.swift */; };
 		D6B3E7C8600F5B3C5D07206B /* clip_merges.txt in Resources */ = {isa = PBXBuildFile; fileRef = 7C2E8B2038ACCF39A539DC98 /* clip_merges.txt */; };
@@ -98,6 +99,7 @@
 		5096AA41CADA5DA3D8855722 /* mobileclip2_s0_text.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = mobileclip2_s0_text.mlpackage; sourceTree = SOURCE_ROOT; };
 		60BD6F3302DB5D10BD7B1FA8 /* FoundationModelsClusterNamer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FoundationModelsClusterNamer.swift; sourceTree = SOURCE_ROOT; };
 		6CB14C253AFF6198FEA8C2D9 /* mobileclip2_s0_image.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = mobileclip2_s0_image.mlpackage; sourceTree = SOURCE_ROOT; };
+		7C0CBDBC1379701F306A1B50 /* PhotoDepthExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PhotoDepthExtractor.swift; sourceTree = SOURCE_ROOT; };
 		7C2E8B2038ACCF39A539DC98 /* clip_merges.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = clip_merges.txt; sourceTree = "<group>"; };
 		97DBAD25E133E86AFE360818 /* MobileCLIPService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileCLIPService.swift; sourceTree = "<group>"; };
 		9982695F2E37BD6000572E3C /* Vision Builder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Vision Builder.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -275,6 +277,7 @@
 				5096AA41CADA5DA3D8855722 /* mobileclip2_s0_text.mlpackage */,
 				C0D100FFD5BF9028DCEF7CA2 /* yolo26n.mlpackage */,
 				F23B54B3B5F1830EAB086B1F /* yolo26_class_names.txt */,
+				7C0CBDBC1379701F306A1B50 /* PhotoDepthExtractor.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -495,6 +498,7 @@
 				D2BB38E274657723531D91E1 /* YOLOObjectDetector.swift in Sources */,
 				1C7341F78F23C6DEC5307AF8 /* SAM3ConceptService.swift in Sources */,
 				799EE588B394F5906A89ECE4 /* FoundationModelsClusterNamer.swift in Sources */,
+				C7FA2997FD3FA0E8EDDEA178 /* PhotoDepthExtractor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

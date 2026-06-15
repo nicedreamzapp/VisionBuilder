@@ -409,7 +409,8 @@ class ObjectRecognitionEngine {
                 \"has_contours\": \(instance.contourPoints != nil),
                 \"contour_points\": \(instance.contourPoints?.count ?? 0),
                 \"detected_at\": \"\(instance.detectedAt)\",
-                \"confidence\": \(instance.detectionConfidence)
+                \"confidence\": \(instance.detectionConfidence),
+                \"depth_meters\": \(instance.depthMeters.map { String(format: "%.3f", $0) } ?? "null")
             }
             """
             

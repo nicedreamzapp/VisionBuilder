@@ -61,7 +61,11 @@ final class ObjectInstance {
     var isVerified: Bool
     var recognitionConfidence: Float?
     var contourPoints: [CGPoint]?
-    
+    /// Distance to the object in meters, sampled from the photo's embedded depth
+    /// map (Portrait/depth-tagged photos only). nil when the source has no depth.
+    /// A free 3D hint for robot-training exports. See PhotoDepthExtractor.
+    var depthMeters: Double? = nil
+
     init(
         id: UUID = UUID(),
         embedding: [Float],
