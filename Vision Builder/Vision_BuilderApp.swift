@@ -18,12 +18,11 @@ struct Vision_BuilderApp: App {
                     UpgradePromptView(
                         isPresented: $showUpgradePrompt,
                         onFreshStart: {
-                            // Mark for reset — will take effect on next launch
-                            ObjectRecognitionStorage.resetDatabase()
-                            // Force restart by exiting
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                exit(0)
-                            }
+                            // Wipe data in place — no relaunch. (The old code called
+                            // exit(0), which looks like a crash to the user and is an
+                            // App Store rejection.)
+                            ObjectRecognitionStorage.resetDatabaseNow()
+                            NotificationCenter.default.post(name: .datasetDidReset, object: nil)
                         },
                         onKeepData: {
                             // Keep existing data

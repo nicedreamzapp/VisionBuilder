@@ -242,6 +242,26 @@ class ObjectRecognitionStorage {
         deleteDatabase()
         print("Pending database reset performed")
     }
+
+    /// Wipe all recognition data from the LIVE store — no app relaunch needed.
+    /// Use this for in-session resets instead of resetDatabase()+exit(0), which
+    /// quits the app (looks like a crash, and Apple rejects exit() calls).
+    @MainActor
+    static func resetDatabaseNow() {
+        let context = shared.context
+        do {
+            try context.delete(model: ObjectInstance.self)
+            try context.delete(model: ObjectIdentity.self)
+            try context.delete(model: UnlabeledCluster.self)
+            try context.save()
+            print("Live database reset complete")
+        } catch {
+            // Fall back to the deferred file-delete on next launch.
+            print("Live reset failed (\(error)); flagging deferred reset")
+            resetDatabase()
+        }
+        PhotoLibraryIndexer.resetProcessedPhotos()
+    }
 }
 
 extension ObjectIdentity {

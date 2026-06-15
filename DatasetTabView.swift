@@ -100,6 +100,10 @@ struct DatasetTabView: View {
                 }
                 initializeIndexer()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .datasetDidReset)) { _ in
+                // Fresh Start wiped the store in place — reload so the UI reflects empty.
+                Task { await datasetManager.loadDataset() }
+            }
             .sheet(isPresented: $showingExportOptions) {
                 ExportOptionsView(exportManager: exportManager, isPresented: $showingExportOptions)
                     .environmentObject(datasetManager)
@@ -667,6 +671,7 @@ struct FolderGridCard: View {
 extension Notification.Name {
     static let switchToLabelTab = Notification.Name("switchToLabelTab")
     static let switchToDatasetTab = Notification.Name("switchToDatasetTab")
+    static let datasetDidReset = Notification.Name("datasetDidReset")
 }
 
 #Preview {

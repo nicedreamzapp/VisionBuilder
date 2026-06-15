@@ -42,7 +42,7 @@ struct MorningInboxView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // Progress header
                 clusterProgressHeader
@@ -279,9 +279,6 @@ struct MorningInboxView: View {
                                             .font(.caption2)
                                         Text(suggestion.label)
                                             .font(.subheadline)
-                                        Text(String(format: "%.0f%%", suggestion.confidence * 100))
-                                            .font(.caption2)
-                                            .foregroundColor(.secondary)
                                     }
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)

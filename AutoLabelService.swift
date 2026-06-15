@@ -91,6 +91,11 @@ class AutoLabelService {
         return suggestLabels(forEmbedding: clipEmbedding, topK: topK)
     }
 
+    /// Only surface suggestions when the best match is genuinely plausible.
+    /// Below this raw cosine, CLIP has no real idea what the cluster is — showing
+    /// a chip there invites a one-tap mislabel. Tunable; lower if too strict.
+    static let minSuggestionSimilarity: Float = 0.15
+
     /// Suggest labels for a given CLIP embedding.
     func suggestLabels(forEmbedding clipEmbedding: [Float], topK: Int = 3) -> [LabelSuggestion] {
         var scores: [(String, Float)] = []
@@ -100,12 +105,14 @@ class AutoLabelService {
         }
         scores.sort { $0.1 > $1.1 }
 
-        // Normalize: map the top similarity to 100% for more intuitive display
-        guard let topScore = scores.first?.1, topScore > 0 else { return [] }
-
-        return scores.prefix(topK).map { label, sim in
-            let normalizedConfidence = sim / topScore
-            return LabelSuggestion(label: label, confidence: normalizedConfidence)
+        // Gate on the RAW similarity (not a normalized-to-100% value, which made
+        // every cluster — even garbage — show a confident-looking top suggestion).
+        guard let topScore = scores.first?.1, topScore >= Self.minSuggestionSimilarity else {
+            return []
         }
+
+        return scores.prefix(topK)
+            .filter { $0.1 >= Self.minSuggestionSimilarity }
+            .map { LabelSuggestion(label: $0.0, confidence: $0.1) }
     }
 }
