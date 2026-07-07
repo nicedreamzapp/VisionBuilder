@@ -5,9 +5,12 @@ jump from the 80-class COCO head in yolo26n. The "pf" (prompt-free) variant
 re-parameterizes the open-vocabulary head into a plain YOLO head.
 
 The exported graph bakes the per-anchor class max INTO the model:
-  outputs: confidence [1,8400], class_id int32 [1,8400], boxes xywh [1,4,8400]
+  outputs: confidence [1,8400], class_id int32 [1,8400], boxes xywh [1,4,8400],
+  mask_coeffs [1,32,8400], protos [1,32,160,160]
 so the app never touches the raw [1,4621,8400] tensor (155 MB/frame — decoding
-that app-side measured 231 ms/frame; this way it's ~0.01 ms).
+that app-side measured 231 ms/frame; this way it's ~0.01 ms). Segmentation:
+per-detection mask = sigmoid(coeffs·protos) — Swift computes it only for the
+handful of kept detections (vDSP matrix multiply, trivial).
 
 Hard-won layout notes (measured on M4 Pro, 30-run averages):
   - topk/gather in-graph → data-dependent shapes → falls off ANE (99 ms)
@@ -46,25 +49,27 @@ class DecodedYOLOE(torch.nn.Module):
         self.m = yolo_model
 
     @staticmethod
-    def _find_pred(o):
+    def _find_tensor(o, match):
         # Output structure is fixed at trace time — walk nested tuples
         if torch.is_tensor(o):
-            return o if (o.ndim == 3 and o.shape[1] == 4 + NC + 32) else None
+            return o if match(o) else None
         if isinstance(o, (list, tuple)):
             for e in o:
-                r = DecodedYOLOE._find_pred(e)
+                r = DecodedYOLOE._find_tensor(e, match)
                 if r is not None:
                     return r
         return None
 
     def forward(self, x):
         out = self.m(x)
-        pred = self._find_pred(out)                # [1, 4621, 8400]
+        pred = self._find_tensor(out, lambda t: t.ndim == 3 and t.shape[1] == 4 + NC + 32)  # [1, 4621, 8400]
+        protos = self._find_tensor(out, lambda t: t.ndim == 4 and t.shape[1] == 32)         # [1, 32, 160, 160]
         boxes = pred[:, :4, :]                     # xywh, 640px space
         cls = pred[:, 4 : 4 + NC, :]
+        coeffs = pred[:, 4 + NC :, :]              # [1, 32, 8400] mask coefficients
         # Static-shape reduce over the LAST axis only — see layout notes above
         conf, cls_id = cls.transpose(1, 2).max(dim=2)  # [1, 8400]
-        return conf, cls_id.to(torch.int32), boxes
+        return conf, cls_id.to(torch.int32), boxes, coeffs, protos
 
 
 def ensure_test_image() -> Path:
@@ -116,6 +121,8 @@ def main() -> None:
             ct.TensorType(name="confidence"),
             ct.TensorType(name="class_id"),
             ct.TensorType(name="boxes"),
+            ct.TensorType(name="mask_coeffs"),  # [1,32,8400] — mask = coeffs · protos
+            ct.TensorType(name="protos"),       # [1,32,160,160] prototype masks
         ],
         minimum_deployment_target=ct.target.iOS17,
         compute_precision=ct.precision.FLOAT16,

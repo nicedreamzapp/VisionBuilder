@@ -16,6 +16,8 @@ struct DetectedObject {
     let confidence: Float
     let rect: CGRect          // Normalized 0-1 coordinates
     let centerPoint: CGPoint  // Normalized center for SAM2
+    // Per-object segmentation mask cropped to rect (alpha bitmap), YOLOE only
+    var maskImage: CGImage? = nil
 }
 
 class YOLOObjectDetector {
@@ -224,6 +226,9 @@ class YOLOObjectDetector {
             print("YOLOE: expected outputs confidence/class_id/boxes not found")
             return []
         }
+        // Segmentation outputs (present in mask-enabled exports)
+        let coeffArr = output.featureValue(for: "mask_coeffs")?.multiArrayValue
+        let protoArr = output.featureValue(for: "protos")?.multiArrayValue
 
         let numAnchors = confArr.count
         func floatAt(_ arr: MLMultiArray, _ i: Int) -> Float {
@@ -235,7 +240,7 @@ class YOLOObjectDetector {
         let clsPtr = clsArr.dataPointer.assumingMemoryBound(to: Int32.self)
         let (scale, padX, padY) = letterbox
 
-        var candidates: [(className: String, score: Float, rect: CGRect)] = []
+        var candidates: [(className: String, score: Float, rect: CGRect, anchor: Int, box640: (Float, Float, Float, Float))] = []
         for i in 0..<numAnchors {
             let score = floatAt(confArr, i)
             guard score > yoloEConfidenceThreshold else { continue }
@@ -265,11 +270,11 @@ class YOLOObjectDetector {
 
             let classIdx = Int(clsPtr[i])
             let className = classIdx < classNames.count ? classNames[classIdx] : "Unknown"
-            candidates.append((className, score, rect))
+            candidates.append((className, score, rect, i, (cx, cy, w, h)))
         }
 
         candidates.sort { $0.score > $1.score }
-        var kept: [(className: String, score: Float, rect: CGRect)] = []
+        var kept: [(className: String, score: Float, rect: CGRect, anchor: Int, box640: (Float, Float, Float, Float))] = []
         for candidate in candidates {
             let dominated = kept.contains { iou($0.rect, candidate.rect) > iouThreshold }
             if !dominated {
@@ -279,9 +284,99 @@ class YOLOObjectDetector {
         }
         return kept.map {
             DetectedObject(className: $0.className, confidence: $0.score, rect: $0.rect,
-                           centerPoint: CGPoint(x: $0.rect.midX, y: $0.rect.midY))
+                           centerPoint: CGPoint(x: $0.rect.midX, y: $0.rect.midY),
+                           maskImage: makeMask(anchor: $0.anchor, box640: $0.box640,
+                                               coeffs: coeffArr, protos: protoArr))
         }
     }
+
+    // MARK: - YOLOE instance masks
+
+    /// mask = coeffs(32) · protos(32×160×160), thresholded at logit 0 (= sigmoid 0.5),
+    /// cropped to the detection box. Returns an alpha bitmap the UI can tint.
+    private func makeMask(
+        anchor: Int,
+        box640: (cx: Float, cy: Float, w: Float, h: Float),
+        coeffs: MLMultiArray?,
+        protos: MLMultiArray?
+    ) -> CGImage? {
+        guard let coeffs, let protos else { return nil }
+        let maskSide = 160
+        let cells = maskSide * maskSide
+        let numAnchors = coeffs.count / 32
+
+        func floats(_ arr: MLMultiArray) -> [Float] {
+            var out = [Float](repeating: 0, count: arr.count)
+            if arr.dataType == .float16 {
+                let p = arr.dataPointer.assumingMemoryBound(to: Float16.self)
+                for i in 0..<arr.count { out[i] = Float(p[i]) }
+            } else {
+                let p = arr.dataPointer.assumingMemoryBound(to: Float.self)
+                for i in 0..<arr.count { out[i] = p[i] }
+            }
+            return out
+        }
+
+        // Cache protos per frame — same tensor for every detection
+        let protoF: [Float]
+        if let cached = cachedProtos, cached.count == protos.count, cachedProtosPointer == protos.dataPointer {
+            protoF = cached
+        } else {
+            protoF = floats(protos)
+            cachedProtos = protoF
+            cachedProtosPointer = protos.dataPointer
+        }
+
+        // Per-anchor coefficient vector (stride = numAnchors across the 32 rows)
+        var coeffVec = [Float](repeating: 0, count: 32)
+        if coeffs.dataType == .float16 {
+            let p = coeffs.dataPointer.assumingMemoryBound(to: Float16.self)
+            for k in 0..<32 { coeffVec[k] = Float(p[k * numAnchors + anchor]) }
+        } else {
+            let p = coeffs.dataPointer.assumingMemoryBound(to: Float.self)
+            for k in 0..<32 { coeffVec[k] = p[k * numAnchors + anchor] }
+        }
+
+        // logits[cells] = coeffVec(1×32) × protos(32×cells)
+        var logits = [Float](repeating: 0, count: cells)
+        protoF.withUnsafeBufferPointer { pp in
+            coeffVec.withUnsafeBufferPointer { cp in
+                vDSP_mmul(cp.baseAddress!, 1, pp.baseAddress!, 1, &logits, 1, 1, vDSP_Length(cells), 32)
+            }
+        }
+
+        // Crop to the box in mask space (640 / 160 = 4 px per cell)
+        let cellScale: Float = Float(inputSize) / Float(maskSide)
+        let x0 = max(0, Int((box640.cx - box640.w / 2) / cellScale))
+        let y0 = max(0, Int((box640.cy - box640.h / 2) / cellScale))
+        let x1 = min(maskSide, Int((box640.cx + box640.w / 2) / cellScale) + 1)
+        let y1 = min(maskSide, Int((box640.cy + box640.h / 2) / cellScale) + 1)
+        let cw = x1 - x0, ch = y1 - y0
+        guard cw > 1, ch > 1 else { return nil }
+
+        // 8-bit alpha bitmap: inside mask = opaque
+        var pixels = [UInt8](repeating: 0, count: cw * ch)
+        for row in 0..<ch {
+            let src = (y0 + row) * maskSide + x0
+            for col in 0..<cw {
+                pixels[row * cw + col] = logits[src + col] > 0 ? 255 : 0
+            }
+        }
+
+        let data = Data(pixels)
+        guard let provider = CGDataProvider(data: data as CFData) else { return nil }
+        return CGImage(
+            width: cw, height: ch,
+            bitsPerComponent: 8, bitsPerPixel: 8, bytesPerRow: cw,
+            space: CGColorSpaceCreateDeviceGray(),
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
+            provider: provider, decode: nil, shouldInterpolate: true,
+            intent: .defaultIntent
+        )
+    }
+
+    private var cachedProtos: [Float]?
+    private var cachedProtosPointer: UnsafeMutableRawPointer?
 
     // MARK: - Decode (same algorithm as project 601)
 

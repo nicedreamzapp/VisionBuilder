@@ -22,6 +22,7 @@ struct LiveDetection: Identifiable {
     let confidence: Float
     let identityLabel: String?    // learned identity name if matched
     let identitySimilarity: Float?
+    let maskImage: CGImage?       // instance segmentation, cropped to rect
 }
 
 // MARK: - Camera session provider
@@ -215,9 +216,20 @@ struct LiveRecognitionView: View {
         let isMine = det.identityLabel != nil
 
         ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(isMine ? Color.green : Color.white.opacity(0.35),
-                        lineWidth: isMine ? 3 : 1)
+            // Segmentation silhouette — the object's actual shape, no rectangles
+            if let mask = det.maskImage {
+                (isMine ? Color.green : Color.white)
+                    .opacity(isMine ? 0.45 : 0.14)
+                    .mask(
+                        Image(decorative: mask, scale: 1)
+                            .resizable()
+                            .interpolation(.medium)
+                    )
+            } else if isMine {
+                // Fallback if a mask is unavailable for a matched object
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.green, lineWidth: 3)
+            }
 
             if isMine {
                 Text("\(det.identityLabel!) \(Int((det.identitySimilarity ?? 0) * 100))%")
@@ -230,10 +242,10 @@ struct LiveRecognitionView: View {
             } else {
                 Text(det.genericLabel)
                     .font(.caption2)
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(.white.opacity(0.55))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Capsule().fill(.black.opacity(0.4)))
+                    .background(Capsule().fill(.black.opacity(0.35)))
                     .offset(y: -20)
             }
         }
@@ -285,9 +297,26 @@ struct LiveRecognitionView: View {
         identityCount = identities.count
 
         let dets = try await detector.detect(in: frame)
+
+        // De-duplicate: the open-vocab head often fires several labels on one
+        // object ("bus" + "police van" + "tour bus"). Keep the highest-confidence
+        // detection when another is mostly the same region.
+        var unique: [DetectedObject] = []
+        for det in dets.sorted(by: { $0.confidence > $1.confidence }) {
+            let duplicate = unique.contains { kept in
+                let inter = kept.rect.intersection(det.rect)
+                guard !inter.isNull else { return false }
+                let interArea = inter.width * inter.height
+                let minArea = min(kept.rect.width * kept.rect.height,
+                                  det.rect.width * det.rect.height)
+                return minArea > 0 && interArea / minArea > 0.75
+            }
+            if !duplicate { unique.append(det) }
+        }
+
         var results: [LiveDetection] = []
 
-        for det in dets.prefix(8) {
+        for det in unique.prefix(8) {
             var identityLabel: String? = nil
             var identitySim: Float? = nil
 
@@ -316,7 +345,8 @@ struct LiveRecognitionView: View {
                 genericLabel: det.className,
                 confidence: det.confidence,
                 identityLabel: identityLabel,
-                identitySimilarity: identitySim
+                identitySimilarity: identitySim,
+                maskImage: det.maskImage
             ))
         }
         return results
