@@ -78,6 +78,16 @@ convert_yolo26() {
     echo "YOLO26 conversion complete."
 }
 
+convert_yoloe() {
+    echo "==> Converting YOLOE (prompt-free) → CoreML"
+    ensure_venv
+    pip install --quiet --upgrade pip
+    pip install --quiet "ultralytics>=8.4" "coremltools>=8.0" "numpy" "Pillow"
+    apply_coremltools_patch
+    python3 scripts/convert_yoloe.py
+    echo "YOLOE conversion complete."
+}
+
 convert_efficientsam3() {
     echo "==> EfficientSAM3 conversion is UPSTREAM-PENDING."
     echo "    Watch https://github.com/SimonZeng7108/efficientsam3 for the CoreML export script."
@@ -87,6 +97,7 @@ convert_efficientsam3() {
 case "$TARGET" in
     mobileclip2)    convert_mobileclip2 ;;
     yolo26)         convert_yolo26 ;;
+    yoloe)          convert_yoloe ;;
     sam3)           convert_efficientsam3 ;;
     all)
         convert_mobileclip2

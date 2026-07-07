@@ -87,8 +87,12 @@ def export_image_encoder(model: torch.nn.Module) -> None:
         compute_units=ct.ComputeUnit.CPU_AND_NE,
         minimum_deployment_target=ct.target.iOS18,
         convert_to="mlprogram",
+        # FLOAT32 is required: the S0 image tower overflows fp16 (verified —
+        # torch fp16 inference also NaNs), so the default fp16 conversion
+        # produced NaN embeddings for every image
+        compute_precision=ct.precision.FLOAT32,
     )
-    mlmodel.short_description = "MobileCLIP2-S0 image encoder, 256x256, 512-dim L2-normalized"
+    mlmodel.short_description = "MobileCLIP2-S0 image encoder, 256x256, 512-dim L2-normalized, fp32"
     mlmodel.save(str(IMAGE_OUT))
     print(f"  → {IMAGE_OUT}")
 

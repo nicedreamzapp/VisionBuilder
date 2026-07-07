@@ -89,8 +89,11 @@ class SimilaritySearchService {
     func splitCandidatesForAutoAccept(
         candidates: [SimilarInstance],
         confirmedCount: Int,
-        autoAcceptThreshold: Int = 3
+        autoAcceptThreshold: Int = AppSettings.ActiveLearning.autoAcceptThreshold
     ) -> (remaining: [SimilarInstance], autoAccepted: [SimilarInstance]) {
+        guard AppSettings.ActiveLearning.enableAutoAccept else {
+            return (remaining: candidates, autoAccepted: [])
+        }
         if confirmedCount < autoAcceptThreshold {
             return (remaining: candidates, autoAccepted: [])
         }

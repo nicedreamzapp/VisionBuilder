@@ -121,14 +121,16 @@ flowchart LR
 | Component | Status | Notes |
 | :--- | :---: | :--- |
 | SAM 2.1 segmentation | ✅ | Solid, runs on Neural Engine |
-| MobileCLIP 2 embeddings | ✅ | Just upgraded from v1 — sharper clusters |
-| YOLO 26 detection | ✅ | NMS-free, COCO 80 classes |
-| DBSCAN clustering | ✅ | Cosine distance on embeddings |
+| MobileCLIP 2 embeddings | ✅ | fp32 (the fp16 tower NaNs — see convert script), center-crop preprocessing |
+| YOLOE detection | ✅ | **4,585 classes**, prompt-free open-vocab, decode baked into the CoreML graph (YOLO 26 / v8 fallback) |
+| Live recognition tab | ✅ | Point the camera — objects *you've labeled* get named on screen, on-device |
+| Bird's-eye dataset mosaic | ✅ | Whole dataset on one zoomable wall (Dataset → ⋯) |
+| DBSCAN clustering | ✅ | Euclidean on unit vectors, eps measured against real embeddings (not vibes) |
 | Photo library scan | ✅ | Working but slow on big libraries |
 | Inbox cluster review | 🟡 | Functional, UX still rough |
 | Manual labeling flow | 🟡 | Has back/next now, editor is busy |
 | Concept search | 🟡 | "Find all my cups" — works, sometimes underwhelming |
-| COCO / CSV export | ✅ | Ready for any standard pipeline |
+| COCO / CSV export | ✅ | Ready for any standard pipeline, real zips, share sheet |
 | Foundation Models smart-naming | 💤 | Scaffolded — needs A17 Pro+ device |
 | SAM 3 text-prompted segmentation | 💤 | Skeleton ready — waiting on Meta CoreML |
 | iCloud sync | ❌ | On the list |

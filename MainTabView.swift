@@ -19,6 +19,7 @@ struct MainTabView: View {
         case 1: return .appGreen     // Dataset tab
         case 2: return .appOrange    // Inbox tab
         case 3: return .appPurple    // Insights tab
+        case 4: return .appTeal      // Live tab
         default: return .appBlue
         }
     }
@@ -65,6 +66,13 @@ struct MainTabView: View {
                     Label("Insights", systemImage: "chart.bar.fill")
                 }
                 .tag(3)
+
+            // Live recognition — names YOUR labeled objects through the camera
+            LiveRecognitionView()
+                .tabItem {
+                    Label("Live", systemImage: "eye.fill")
+                }
+                .tag(4)
             }
             .tint(tabAccentColor)
             .onChange(of: selectedTab) { _, _ in
@@ -92,8 +100,27 @@ struct MainTabView: View {
             .onReceive(NotificationCenter.default.publisher(for: .switchToDatasetTab)) { _ in
                 selectedTab = 1
             }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                versionFooter
+            }
         }
         .withToasts()
+    }
+
+    // Inconspicuous build stamp so an installed build is identifiable at a glance
+    private var versionFooter: some View {
+        Text(Self.versionString)
+            .font(.system(size: 9, weight: .regular, design: .monospaced))
+            .foregroundColor(.secondary.opacity(0.55))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 1)
+            .allowsHitTesting(false)
+    }
+
+    static var versionString: String {
+        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        return "v\(short) (\(build))"
     }
 }
 

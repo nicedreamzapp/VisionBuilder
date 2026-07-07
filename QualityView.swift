@@ -9,6 +9,7 @@ struct QualityView: View {
     @State private var selectedIssueType: IssueFilter = .all
     @State private var showingDeleteConfirmation = false
     @State private var issuesToDelete: [DataQualityManager.QualityIssue] = []
+    @Environment(\.dismiss) private var dismiss
 
     enum IssueFilter: String, CaseIterable {
         case all = "All Issues"
@@ -31,6 +32,11 @@ struct QualityView: View {
             .background(AppBackgroundGradient().ignoresSafeArea())
             .navigationTitle("Quality Analysis")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         Task { await analyzeQuality() }

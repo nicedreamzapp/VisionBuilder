@@ -13,6 +13,7 @@ SWIFT_FILES = %w[
   SAM3ConceptService.swift
   FoundationModelsClusterNamer.swift
   PhotoDepthExtractor.swift
+  LiveRecognitionView.swift
 ]
 
 # .mlpackage are directories — added as folder references and bundled as resources.
@@ -20,10 +21,12 @@ ML_PACKAGES = %w[
   mobileclip2_s0_image.mlpackage
   mobileclip2_s0_text.mlpackage
   yolo26n.mlpackage
+  yoloe11s_pf.mlpackage
 ]
 
 RESOURCE_FILES = %w[
   yolo26_class_names.txt
+  yoloe_classes.json
 ]
 
 project = Xcodeproj::Project.open(PROJECT_PATH)

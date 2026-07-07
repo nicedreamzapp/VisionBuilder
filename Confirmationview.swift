@@ -21,7 +21,7 @@ struct ConfirmationView: View {
     
     @Environment(\.dismiss) private var dismiss
     
-    private let autoAcceptThreshold = 3
+    private let autoAcceptThreshold = AppSettings.ActiveLearning.autoAcceptThreshold
     private let similarityService = SimilaritySearchService()
     
     private var currentCandidate: SimilarInstance? {
@@ -145,15 +145,17 @@ struct ConfirmationView: View {
                 placeholderView
             }
             
-            HStack {
-                Text("Similarity:")
-                    .foregroundColor(.secondary)
-                Text("\(Int(candidate.similarity * 100))%")
-                    .fontWeight(.semibold)
-                    .foregroundColor(similarityColor(candidate.similarity))
+            if AppSettings.UI.showSimilarityScore {
+                HStack {
+                    Text("Similarity:")
+                        .foregroundColor(.secondary)
+                    Text("\(Int(candidate.similarity * 100))%")
+                        .fontWeight(.semibold)
+                        .foregroundColor(similarityColor(candidate.similarity))
+                }
+                .font(.subheadline)
+                .padding(.horizontal)
             }
-            .font(.subheadline)
-            .padding(.horizontal)
             
             Spacer()
         }

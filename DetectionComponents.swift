@@ -141,6 +141,11 @@ struct SimplifiedControlPanel: View {
     @Binding var showDatasetBrowser: Bool
     let onReturnToLibrary: () -> Void
 
+    // Undo lives here because the panel always renders — the editor's old
+    // navigationBarItems never showed inside sheet/fullScreenCover contexts
+    var canUndo: Bool = false
+    var onUndo: (() -> Void)? = nil
+
     var instructionText: String {
         if boxState.boxes.isEmpty {
             return "Tap objects to create boxes or use Auto-Detect"
@@ -168,6 +173,17 @@ struct SimplifiedControlPanel: View {
 
             // Button row
             HStack(spacing: 12) {
+                // Undo button - only when there's something to undo
+                if canUndo, let onUndo {
+                    EnhancedControlButton(
+                        emoji: "↩️",
+                        label: "Undo",
+                        color: .orange,
+                        action: onUndo
+                    )
+                    .transition(.scale.combined(with: .opacity))
+                }
+
                 // Delete button - only show if boxes exist
                 if !boxState.boxes.isEmpty {
                     EnhancedControlButton(

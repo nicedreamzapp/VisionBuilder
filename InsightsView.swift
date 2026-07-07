@@ -10,15 +10,7 @@ struct InsightsView: View {
     @State private var recognitionStats: RecognitionStatistics?
     @State private var labelFolders: [LabelFolderStats] = []
     @State private var isLoading = true
-    @State private var selectedTimeRange: TimeRange = .allTime
     @State private var showingSettings = false
-
-    enum TimeRange: String, CaseIterable {
-        case today = "Today"
-        case week = "This Week"
-        case month = "This Month"
-        case allTime = "All Time"
-    }
 
     var body: some View {
         NavigationStack {
@@ -100,6 +92,17 @@ struct InsightsView: View {
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
+
+            Button {
+                NotificationCenter.default.post(name: .switchToDatasetTab, object: nil)
+            } label: {
+                Label("Go to Dataset", systemImage: "folder.fill")
+                    .font(.headline)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+            }
+            .buttonStyle(.borderedProminent)
+            .padding(.top, 8)
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -318,8 +321,8 @@ struct InsightsView: View {
                 .font(.headline)
 
             HStack(spacing: 20) {
-                StatItem(title: "Learned Objects", value: "\(stats.totalIdentities)", icon: "brain")
-                StatItem(title: "Instances", value: "\(stats.totalInstances)", icon: "photo.stack")
+                StatItem(title: "Unique Objects", value: "\(stats.totalIdentities)", icon: "brain")
+                StatItem(title: "Total Sightings", value: "\(stats.totalInstances)", icon: "photo.stack")
                 StatItem(title: "Pending", value: "\(stats.pendingClusters)", icon: "tray.full")
             }
         }

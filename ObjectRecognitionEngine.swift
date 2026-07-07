@@ -21,10 +21,13 @@ class ObjectRecognitionEngine {
         let uncertaintyThreshold: Float  // Below this, definitely unknown
         let clusteringThreshold: Float   // Max distance for clustering unknowns
         
+        // Thresholds measured against real MobileCLIP2 embeddings (offline sim,
+        // 2026-07-06): same-object re-sightings score cosine 0.34-0.81, so the
+        // old 0.85 match bar could never fire and every scan re-asked the user.
         static let `default` = RecognitionConfig(
-            matchThreshold: 0.85,        // 85% similarity = match
-            uncertaintyThreshold: 0.70,  // Below 70% = definitely unknown
-            clusteringThreshold: 0.25    // Distance threshold for clustering
+            matchThreshold: 0.78,        // above = same label, auto-match
+            uncertaintyThreshold: 0.62,  // below = definitely unknown
+            clusteringThreshold: 0.9     // euclidean on unit vectors, matches indexer
         )
     }
     
@@ -162,45 +165,107 @@ class ObjectRecognitionEngine {
     ) throws -> [UnlabeledCluster] {
         let config = config ?? RecognitionConfig.default
         guard !instances.isEmpty else { return [] }
-        
+
+        let memberGroups = Self.dbscan(
+            embeddings: instances.map { $0.embedding },
+            eps: config.clusteringThreshold,
+            minPts: 2
+        )
+
         var clusters: [UnlabeledCluster] = []
-        var unassigned = instances
-        
-        while !unassigned.isEmpty {
-            // Start new cluster with first unassigned instance
-            let seed = unassigned.removeFirst()
-            var clusterMembers = [seed]
-            
-            // Find all instances similar to seed
-            unassigned = unassigned.filter { instance in
-                let distance = EmbeddingService.euclideanDistance(
-                    seed.embedding,
-                    instance.embedding
-                )
-                
-                if distance < config.clusteringThreshold {
-                    clusterMembers.append(instance)
-                    return false // Remove from unassigned
-                }
-                return true // Keep in unassigned
-            }
-            
-            // Calculate cluster centroid
+        for group in memberGroups {
+            let clusterMembers = group.map { instances[$0] }
             let centroid = calculateCentroid(embeddings: clusterMembers.map { $0.embedding })
-            
-            // Create cluster
+
             let cluster = UnlabeledCluster(
                 instances: clusterMembers,
                 centroidEmbedding: centroid
             )
             cluster.selectRepresentative()
-            
+
             clusters.append(cluster)
         }
-        
-        print("✅ Clustered \(instances.count) instances into \(clusters.count) clusters")
-        
+
+        print("✅ Clustered \(instances.count) instances into \(clusters.count) clusters (DBSCAN eps=\(config.clusteringThreshold))")
+
         return clusters
+    }
+
+    /// DBSCAN over embedding vectors. Returns groups of indices into `embeddings`.
+    /// Noise points (fewer than `minPts` neighbors) come back as singleton groups
+    /// so every instance still reaches the labeling inbox.
+    /// `minPts` counts the point itself, so minPts=2 means a pair of near-identical
+    /// objects forms a cluster.
+    nonisolated static func dbscan(embeddings: [[Float]], eps: Float, minPts: Int) -> [[Int]] {
+        let n = embeddings.count
+        let epsSquared = eps * eps
+
+        // Squared distance with no intermediate allocations — this runs n²/2 times
+        func withinEps(_ a: [Float], _ b: [Float]) -> Bool {
+            guard a.count == b.count, !a.isEmpty else { return false }
+            var sum: Float = 0
+            for i in 0..<a.count {
+                let d = a[i] - b[i]
+                sum += d * d
+                if sum > epsSquared { return false }
+            }
+            return true
+        }
+
+        // Build neighbor lists (symmetric, computed once per pair)
+        var neighbors = [[Int]](repeating: [], count: n)
+        for i in 0..<n {
+            for j in (i + 1)..<n where withinEps(embeddings[i], embeddings[j]) {
+                neighbors[i].append(j)
+                neighbors[j].append(i)
+            }
+        }
+
+        let noiseLabel = -1
+        let unvisited = -2
+        var labels = [Int](repeating: unvisited, count: n)
+        var clusterID = 0
+
+        for i in 0..<n where labels[i] == unvisited {
+            // Core point check: minPts counts the point itself
+            guard neighbors[i].count + 1 >= minPts else {
+                labels[i] = noiseLabel
+                continue
+            }
+
+            // Expand cluster from this core point (BFS over density-reachable points)
+            labels[i] = clusterID
+            var frontier = neighbors[i]
+            var f = 0
+            while f < frontier.count {
+                let p = frontier[f]
+                f += 1
+
+                if labels[p] == noiseLabel {
+                    labels[p] = clusterID // border point: reachable but not core
+                    continue
+                }
+                guard labels[p] == unvisited else { continue }
+                labels[p] = clusterID
+
+                if neighbors[p].count + 1 >= minPts {
+                    frontier.append(contentsOf: neighbors[p])
+                }
+            }
+            clusterID += 1
+        }
+
+        var groups = [[Int]](repeating: [], count: clusterID)
+        var singletons: [[Int]] = []
+        for i in 0..<n {
+            if labels[i] >= 0 {
+                groups[labels[i]].append(i)
+            } else {
+                singletons.append([i])
+            }
+        }
+
+        return groups + singletons
     }
     
     private func calculateCentroid(embeddings: [[Float]]) -> [Float] {

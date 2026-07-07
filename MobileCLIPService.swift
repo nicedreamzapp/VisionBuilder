@@ -209,9 +209,18 @@ class MobileCLIPService {
             bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
         ) else { return nil }
 
-        // Draw image scaled to 256x256
+        // Aspect-fill + center crop (CLIP's training geometry) — squashing to
+        // 256x256 measurably degrades embeddings (0.51 vs 1.0 cosine to reference)
         guard let cgImage = image.cgImage else { return nil }
-        context.draw(cgImage, in: CGRect(origin: .zero, size: size))
+        let iw = CGFloat(cgImage.width), ih = CGFloat(cgImage.height)
+        let fillScale = max(size.width / iw, size.height / ih)
+        let drawRect = CGRect(
+            x: (size.width - iw * fillScale) / 2,
+            y: (size.height - ih * fillScale) / 2,
+            width: iw * fillScale,
+            height: ih * fillScale
+        )
+        context.draw(cgImage, in: drawRect)
 
         return buffer
     }

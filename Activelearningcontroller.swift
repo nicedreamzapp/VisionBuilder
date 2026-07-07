@@ -161,10 +161,13 @@ class ActiveLearningController {
         await moveToNextCluster()
     }
     
-    func getProgress() -> (labeled: Int, remaining: Int, total: Int) {
+    func getProgress() -> (labeled: Int, skipped: Int, remaining: Int, total: Int) {
         let total = unlabeledClusters.count
-        let labeled = unlabeledClusters.filter { $0.hasBeenPresented }.count
-        return (labeled: labeled, remaining: total - labeled, total: total)
+        // Skipped clusters were presented but never given a label — counting
+        // them as "labeled" made the completion screen lie
+        let labeled = unlabeledClusters.filter { $0.hasBeenPresented && $0.userLabel != nil }.count
+        let skipped = unlabeledClusters.filter { $0.hasBeenPresented && $0.userLabel == nil }.count
+        return (labeled: labeled, skipped: skipped, remaining: total - labeled - skipped, total: total)
     }
     
     // Helper to get candidates for current confirmation state

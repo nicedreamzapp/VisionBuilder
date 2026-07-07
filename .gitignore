@@ -38,6 +38,8 @@ mobileclip2_s0_image.mlpackage/
 mobileclip2_s0_text.mlpackage/
 yolo26n.mlpackage/
 yolo26n.pt
+yoloe11s_pf.mlpackage/
+yoloe-11s-seg-pf.pt
 
 # Carthage
 Carthage/Build/

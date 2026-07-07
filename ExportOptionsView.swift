@@ -1,4 +1,17 @@
 import SwiftUI
+import UIKit
+
+/// System share sheet — the only way for the user to actually receive an
+/// exported dataset file (AirDrop, Files, Messages, ...)
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context _: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_: UIActivityViewController, context _: Context) {}
+}
 
 struct ExportOptionsView: View {
     @ObservedObject var exportManager: ExportManager
@@ -6,11 +19,33 @@ struct ExportOptionsView: View {
 
     @State private var selectedFormat: ExportFormat = .visionBuilder
     @State private var selectedScale: ImageScale = .high
+    @State private var showingShareSheet = false
 
     var body: some View {
         ZStack {
             backgroundDimmer
             dialogContent
+        }
+        .onAppear {
+            // Populate pendingBoxes/labels from the on-disk dataset — without
+            // this the Export button has nothing to export
+            exportManager.prepareExportFromDataset()
+        }
+        .onChange(of: exportManager.shareItems.count) { _, newCount in
+            if newCount > 0 {
+                showingShareSheet = true
+            }
+        }
+        .onChange(of: exportManager.lastError) { _, newError in
+            if let error = newError {
+                ToastManager.shared.showError("Export failed", message: error)
+                exportManager.lastError = nil
+            }
+        }
+        .sheet(isPresented: $showingShareSheet, onDismiss: {
+            isPresented = false
+        }) {
+            ShareSheet(activityItems: exportManager.shareItems)
         }
     }
 
@@ -206,6 +241,10 @@ struct ExportOptionsView: View {
                     }
                 }
             }
+        } else {
+            Label("No labeled objects to export yet", systemImage: "tray")
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
         }
     }
 
@@ -250,18 +289,23 @@ struct ExportOptionsView: View {
 
     // MARK: - Toggle
 
+    @ViewBuilder
     var toggleSection: some View {
-        Toggle(isOn: $exportManager.exportOptions.includeMetadata) {
-            Label("Include Metadata", systemImage: "doc.text")
-                .font(.system(size: 14, weight: .medium))
+        // Only meaningful for the native format — annotation files ARE the
+        // metadata in every other format
+        if selectedFormat == .visionBuilder {
+            Toggle(isOn: $exportManager.exportOptions.includeMetadata) {
+                Label("Include Metadata", systemImage: "doc.text")
+                    .font(.system(size: 14, weight: .medium))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.3)
+            )
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.ultraThinMaterial)
-                .opacity(0.3)
-        )
     }
 
     // MARK: - Action Buttons
@@ -276,15 +320,26 @@ struct ExportOptionsView: View {
             .glassStyle(variant: .regular, floating: false)
             .foregroundColor(.primary)
 
-            Button("Export") {
+            Button {
+                // Dialog stays up until the share sheet takes over — dismissing
+                // here would orphan the export with no way to receive the file
                 exportManager.executeExportForSharing()
-                isPresented = false
+            } label: {
+                if exportManager.isExporting {
+                    ProgressView()
+                        .tint(.white)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    Text("Export")
+                        .frame(maxWidth: .infinity)
+                }
             }
-            .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .glassStyle(variant: .regular, floating: false, tint: .blue)
             .foregroundColor(.white)
             .font(.system(size: 16, weight: .semibold))
+            .disabled(exportManager.isExporting || exportManager.pendingBoxes.isEmpty)
+            .opacity(exportManager.pendingBoxes.isEmpty ? 0.5 : 1)
         }
     }
 

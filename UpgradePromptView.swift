@@ -13,6 +13,8 @@ struct UpgradePromptView: View {
     var onFreshStart: () -> Void
     var onKeepData: () -> Void
 
+    @State private var showingFreshStartConfirmation = false
+
     var body: some View {
         VStack(spacing: 28) {
             Spacer()
@@ -67,9 +69,7 @@ struct UpgradePromptView: View {
             // Actions
             VStack(spacing: 12) {
                 Button {
-                    onFreshStart()
-                    markUpgradeSeen()
-                    isPresented = false
+                    showingFreshStartConfirmation = true
                 } label: {
                     HStack {
                         Image(systemName: "arrow.counterclockwise")
@@ -101,6 +101,17 @@ struct UpgradePromptView: View {
             Spacer().frame(height: 8)
         }
         .padding(.horizontal, 24)
+        .alert("Reset Database?", isPresented: $showingFreshStartConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Fresh Start", role: .destructive) {
+                onFreshStart()
+                markUpgradeSeen()
+                isPresented = false
+                ToastManager.shared.showSuccess("Fresh start complete", message: "Database reset — new scans get full AI features")
+            }
+        } message: {
+            Text("This deletes all scanned objects, clusters, and sessions. Labeled folders in Files are kept. This cannot be undone.")
+        }
     }
 
     private func featureRow(icon: String, color: Color, title: String, detail: String) -> some View {

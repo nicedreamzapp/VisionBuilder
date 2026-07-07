@@ -530,7 +530,11 @@ class ExportManager: ObservableObject {
     // MARK: - Execute Export
 
     func executeExportForSharing() {
-        guard !pendingBoxes.isEmpty else { return }
+        guard !pendingBoxes.isEmpty else {
+            lastError = "Nothing to export — no labeled objects found on disk"
+            print("⚠️ executeExportForSharing: pendingBoxes is empty")
+            return
+        }
 
         isExporting = true
         shareItems.removeAll()
@@ -566,6 +570,10 @@ class ExportManager: ObservableObject {
             try await exportCreateMLFormat(to: exportFolder)
         case .yolo:
             try await exportYOLOFormat(to: exportFolder)
+        case .coco:
+            try await exportCOCOFormat(to: exportFolder)
+        case .csv:
+            try await exportCSVFormat(to: exportFolder)
         }
 
         // Create zip
@@ -575,9 +583,205 @@ class ExportManager: ObservableObject {
         return zipURL
     }
 
-    private func exportVisionBuilderFormat(to _: URL) async throws {
-        // Implementation specific to Vision Builder format
-        // Copy images and metadata as-is
+    private func exportVisionBuilderFormat(to folder: URL) async throws {
+        // Native format: copy each selected label folder (images + metadata.json) as-is
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        var copiedLabels: [String] = []
+
+        for label in exportOptions.selectedLabels.sorted() {
+            let trimmedLabel = sanitizedLabel(label)
+            let labelFolder = documentsPath.appendingPathComponent(trimmedLabel)
+            guard FileManager.default.fileExists(atPath: labelFolder.path) else { continue }
+
+            let destFolder = folder.appendingPathComponent(trimmedLabel)
+            try? FileManager.default.removeItem(at: destFolder)
+            try FileManager.default.copyItem(at: labelFolder, to: destFolder)
+            copiedLabels.append(label)
+
+            if !exportOptions.includeMetadata {
+                // Images only — strip the per-object metadata.json files
+                let enumerator = FileManager.default.enumerator(at: destFolder, includingPropertiesForKeys: nil)
+                while let file = enumerator?.nextObject() as? URL {
+                    if file.lastPathComponent == "metadata.json" {
+                        try? FileManager.default.removeItem(at: file)
+                    }
+                }
+            }
+        }
+
+        // Manifest so re-imports and other tools know what they're looking at
+        let manifest: [String: Any] = [
+            "format": "vision-builder-native",
+            "version": 1,
+            "exportedAt": ISO8601DateFormatter().string(from: Date()),
+            "labels": copiedLabels,
+        ]
+        let manifestData = try JSONSerialization.data(withJSONObject: manifest, options: [.prettyPrinted, .sortedKeys])
+        try manifestData.write(to: folder.appendingPathComponent("manifest.json"))
+        print("✅ Native export: \(copiedLabels.count) label folders + manifest.json")
+    }
+
+    // MARK: - Shared dataset traversal
+
+    /// Every (objectFolder, metadata) pair on disk whose label is selected for export
+    private func selectedObjectFolders() throws -> [(folder: URL, metadata: EnhancedObjectMetadata)] {
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        var results: [(URL, EnhancedObjectMetadata)] = []
+
+        for label in exportOptions.selectedLabels.sorted() {
+            let labelFolder = documentsPath.appendingPathComponent(sanitizedLabel(label))
+            guard FileManager.default.fileExists(atPath: labelFolder.path) else { continue }
+
+            let objectFolders = try FileManager.default.contentsOfDirectory(
+                at: labelFolder,
+                includingPropertiesForKeys: nil
+            ).filter { $0.lastPathComponent.hasPrefix("Object_") }
+
+            for objectFolder in objectFolders {
+                let metadataPath = objectFolder.appendingPathComponent("metadata.json")
+                guard let data = try? Data(contentsOf: metadataPath),
+                      let metadata = try? JSONDecoder().decode(EnhancedObjectMetadata.self, from: data),
+                      exportOptions.selectedLabels.contains(metadata.label)
+                else { continue }
+                results.append((objectFolder, metadata))
+            }
+        }
+        return results
+    }
+
+    private func exportImageFileName(for scale: ImageScale) -> String {
+        switch scale {
+        case .low: return "image_640.jpg"
+        case .medium, .high: return "image_1280.jpg" // no 2048 stored; 1280 is closest
+        case .original: return "image_full.jpg"
+        }
+    }
+
+    // MARK: - Export in COCO format
+
+    private func exportCOCOFormat(to folder: URL) async throws {
+        // Standard COCO detection JSON: images / annotations (bbox in pixels,
+        // [x, y, width, height]) / categories. One image per object folder.
+        struct COCOImage: Codable {
+            let id: Int
+            let file_name: String
+            let width: Int
+            let height: Int
+        }
+        struct COCOAnnotation: Codable {
+            let id: Int
+            let image_id: Int
+            let category_id: Int
+            let bbox: [Double]
+            let area: Double
+            let iscrowd: Int
+        }
+        struct COCOCategory: Codable {
+            let id: Int
+            let name: String
+            let supercategory: String
+        }
+        struct COCORoot: Codable {
+            let images: [COCOImage]
+            let annotations: [COCOAnnotation]
+            let categories: [COCOCategory]
+        }
+
+        let selectedLabelsSorted = exportOptions.selectedLabels.sorted()
+        // COCO category ids are 1-based by convention
+        let categoryID = Dictionary(uniqueKeysWithValues: selectedLabelsSorted.enumerated().map { ($1, $0 + 1) })
+
+        var images: [COCOImage] = []
+        var annotations: [COCOAnnotation] = []
+        var nextAnnotationID = 1
+
+        let imagesFolder = folder.appendingPathComponent("images")
+        try FileManager.default.createDirectory(at: imagesFolder, withIntermediateDirectories: true)
+
+        for (objectFolder, metadata) in try selectedObjectFolders() {
+            let imagePath = objectFolder.appendingPathComponent(exportImageFileName(for: exportOptions.imageScale))
+            guard FileManager.default.fileExists(atPath: imagePath.path),
+                  let image = UIImage(contentsOfFile: imagePath.path)
+            else { continue }
+
+            let uniqueImageName = "\(sanitizedLabel(metadata.label))_\(objectFolder.lastPathComponent).jpg"
+            let destImageURL = imagesFolder.appendingPathComponent(uniqueImageName)
+            try? FileManager.default.removeItem(at: destImageURL)
+            try FileManager.default.copyItem(at: imagePath, to: destImageURL)
+
+            let imgW = Double(image.size.width)
+            let imgH = Double(image.size.height)
+            let imageID = images.count + 1
+            images.append(COCOImage(id: imageID, file_name: uniqueImageName, width: Int(imgW), height: Int(imgH)))
+
+            // All selected-label boxes recorded for this image (normalized → pixels)
+            for boxInfo in metadata.allBoxesInImage where categoryID[boxInfo.label] != nil {
+                let x = Double(boxInfo.rect.origin.x) * imgW
+                let y = Double(boxInfo.rect.origin.y) * imgH
+                let w = Double(boxInfo.rect.width) * imgW
+                let h = Double(boxInfo.rect.height) * imgH
+                annotations.append(COCOAnnotation(
+                    id: nextAnnotationID,
+                    image_id: imageID,
+                    category_id: categoryID[boxInfo.label]!,
+                    bbox: [x, y, w, h],
+                    area: w * h,
+                    iscrowd: 0
+                ))
+                nextAnnotationID += 1
+            }
+        }
+
+        let categories = selectedLabelsSorted.map {
+            COCOCategory(id: categoryID[$0]!, name: $0, supercategory: "object")
+        }
+        let root = COCORoot(images: images, annotations: annotations, categories: categories)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        try encoder.encode(root).write(to: folder.appendingPathComponent("annotations.json"))
+        print("✅ COCO export: \(images.count) images, \(annotations.count) annotations, \(categories.count) categories")
+    }
+
+    // MARK: - Export in CSV format
+
+    private func exportCSVFormat(to folder: URL) async throws {
+        // One row per bounding box, pixel coordinates — Roboflow-style CSV
+        var lines = ["image,label,x_min,y_min,x_max,y_max,image_width,image_height"]
+
+        let imagesFolder = folder.appendingPathComponent("images")
+        try FileManager.default.createDirectory(at: imagesFolder, withIntermediateDirectories: true)
+
+        for (objectFolder, metadata) in try selectedObjectFolders() {
+            let imagePath = objectFolder.appendingPathComponent(exportImageFileName(for: exportOptions.imageScale))
+            guard FileManager.default.fileExists(atPath: imagePath.path),
+                  let image = UIImage(contentsOfFile: imagePath.path)
+            else { continue }
+
+            let uniqueImageName = "\(sanitizedLabel(metadata.label))_\(objectFolder.lastPathComponent).jpg"
+            let destImageURL = imagesFolder.appendingPathComponent(uniqueImageName)
+            try? FileManager.default.removeItem(at: destImageURL)
+            try FileManager.default.copyItem(at: imagePath, to: destImageURL)
+
+            let imgW = Double(image.size.width)
+            let imgH = Double(image.size.height)
+
+            for boxInfo in metadata.allBoxesInImage where exportOptions.selectedLabels.contains(boxInfo.label) {
+                let xMin = Double(boxInfo.rect.minX) * imgW
+                let yMin = Double(boxInfo.rect.minY) * imgH
+                let xMax = Double(boxInfo.rect.maxX) * imgW
+                let yMax = Double(boxInfo.rect.maxY) * imgH
+                // Quote labels so commas/spaces in names can't break the CSV
+                let quotedLabel = "\"\(boxInfo.label.replacingOccurrences(of: "\"", with: "\"\""))\""
+                lines.append(String(
+                    format: "%@,%@,%.1f,%.1f,%.1f,%.1f,%.0f,%.0f",
+                    uniqueImageName, quotedLabel, xMin, yMin, xMax, yMax, imgW, imgH
+                ))
+            }
+        }
+
+        let csv = lines.joined(separator: "\n")
+        try csv.write(to: folder.appendingPathComponent("annotations.csv"), atomically: true, encoding: .utf8)
+        print("✅ CSV export: \(lines.count - 1) box rows")
     }
 
     // MARK: - Export in Create ML format
@@ -874,12 +1078,16 @@ enum ExportFormat: String, CaseIterable {
     case visionBuilder = "Vision Builder"
     case createML = "Create ML"
     case yolo = "YOLO"
+    case coco = "COCO"
+    case csv = "CSV"
 
     var icon: String {
         switch self {
         case .visionBuilder: return "cube.box"
         case .createML: return "apple.logo"
         case .yolo: return "doc.text"
+        case .coco: return "curlybraces"
+        case .csv: return "tablecells"
         }
     }
 
@@ -888,6 +1096,8 @@ enum ExportFormat: String, CaseIterable {
         case .visionBuilder: return "Native format with full metadata"
         case .createML: return "Apple's ML training format"
         case .yolo: return "Popular object detection format"
+        case .coco: return "Standard JSON for RF-DETR & research"
+        case .csv: return "Spreadsheet-friendly box list"
         }
     }
 }
@@ -942,24 +1152,23 @@ extension FileManager {
             try task.run()
             task.waitUntilExit()
         #else
-            // iOS doesn't have Process, so we need an alternative approach
+            // NSFileCoordinator's .forUploading produces a real zip archive of a
+            // directory — no third-party compression library needed on iOS
             if FileManager.default.fileExists(atPath: destinationURL.path) {
                 try FileManager.default.removeItem(at: destinationURL)
             }
-            // Create a temporary directory structure
-            let tempDir = destinationURL.deletingLastPathComponent()
-                .appendingPathComponent("temp_\(UUID().uuidString)")
-            try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-            // Copy the source to temp
-            let destInTemp = tempDir.appendingPathComponent(sourceURL.lastPathComponent)
-            try FileManager.default.copyItem(at: sourceURL, to: destInTemp)
-            // For iOS, we would need to use a compression library
-            // For now, just move the temp folder to destination
-            try FileManager.default.moveItem(at: tempDir, to: destinationURL)
-            // Note: In production, install a compression library like:
-            // - ZIPFoundation via Swift Package Manager
-            // - DataCompression
-            // Then use: try FileManager.default.zipItem(at: sourceURL, to: destinationURL, compressionMethod: .deflate)
+            var coordinatorError: NSError?
+            var copyError: Error?
+            let coordinator = NSFileCoordinator()
+            coordinator.coordinate(readingItemAt: sourceURL, options: [.forUploading], error: &coordinatorError) { zippedURL in
+                do {
+                    try FileManager.default.copyItem(at: zippedURL, to: destinationURL)
+                } catch {
+                    copyError = error
+                }
+            }
+            if let coordinatorError { throw coordinatorError }
+            if let copyError { throw copyError }
         #endif
     }
 }

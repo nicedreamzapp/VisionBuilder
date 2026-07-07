@@ -8,13 +8,17 @@
 
 /* Begin PBXBuildFile section */
 		00173807359015CF2D339D91 /* CLIPTokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE07F701F1AC0699583CB401 /* CLIPTokenizer.swift */; };
+		1BC60224FCE48A132BF0ED38 /* BirdsEyeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D92985B80B592CAB9C1D5ED /* BirdsEyeView.swift */; };
 		1C7341F78F23C6DEC5307AF8 /* SAM3ConceptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B92008C2CDCC6AAE8C526CE8 /* SAM3ConceptService.swift */; };
 		22C638EF089770F08DA09D8C /* EmbeddingMigrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A06C6DF89F0F5B093E8F8FC /* EmbeddingMigrationService.swift */; };
+		29C7F40AE70E9945ADCBE3E8 /* yoloe_classes.json in Resources */ = {isa = PBXBuildFile; fileRef = 3281B6CDC0E376620825105C /* yoloe_classes.json */; };
 		2C374CDF9944A8D8926F19B6 /* clip_vocab.json in Resources */ = {isa = PBXBuildFile; fileRef = F648D43794F8E88C16B8EFE2 /* clip_vocab.json */; };
 		3BA79C57CAA9AEFDCD2D6A90 /* yolov8n_oiv7.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 3BEB7866DF5C3719944EDDAE /* yolov8n_oiv7.mlpackage */; };
 		4062AF4C60DDA2579533D29D /* ConceptSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411FFD3B7077CB515964FC71 /* ConceptSearchView.swift */; };
+		4910026BAC81D93E4BE1990A /* LiveRecognitionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93B8DE102938B809016716A8 /* LiveRecognitionView.swift */; };
 		51B0BA19D09A60415EFA6AA9 /* mobileclip_s0_text.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 2F9DA7FC5EAFC0C58D406FDC /* mobileclip_s0_text.mlpackage */; };
 		60754559EF10917667CD3EF3 /* yolo26n.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = C0D100FFD5BF9028DCEF7CA2 /* yolo26n.mlpackage */; };
+		6B3369E954E0B7B159D6CBB7 /* yoloe11s_pf.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = DE19F3D31C2EB484FE5FAE41 /* yoloe11s_pf.mlpackage */; };
 		7848126E9D2D1C4641DC699C /* mobileclip2_s0_image.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 6CB14C253AFF6198FEA8C2D9 /* mobileclip2_s0_image.mlpackage */; };
 		799EE588B394F5906A89ECE4 /* FoundationModelsClusterNamer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60BD6F3302DB5D10BD7B1FA8 /* FoundationModelsClusterNamer.swift */; };
 		955DF5883C0FD4D3B3B9D034 /* AutoLabelService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E417A67E74224E364E5B8608 /* AutoLabelService.swift */; };
@@ -93,14 +97,17 @@
 		1188732D81145BA209575562 /* ConceptSearchService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConceptSearchService.swift; sourceTree = "<group>"; };
 		1EBB83979BB6E63AD9AEF9FA /* mobileclip_s0_image.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.mlpackage; path = mobileclip_s0_image.mlpackage; sourceTree = "<group>"; };
 		2F9DA7FC5EAFC0C58D406FDC /* mobileclip_s0_text.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.mlpackage; path = mobileclip_s0_text.mlpackage; sourceTree = "<group>"; };
+		3281B6CDC0E376620825105C /* yoloe_classes.json */ = {isa = PBXFileReference; includeInIndex = 1; path = yoloe_classes.json; sourceTree = SOURCE_ROOT; };
 		3BEB7866DF5C3719944EDDAE /* yolov8n_oiv7.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.mlpackage; path = yolov8n_oiv7.mlpackage; sourceTree = "<group>"; };
 		411FFD3B7077CB515964FC71 /* ConceptSearchView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConceptSearchView.swift; sourceTree = "<group>"; };
 		4A06C6DF89F0F5B093E8F8FC /* EmbeddingMigrationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmbeddingMigrationService.swift; sourceTree = "<group>"; };
 		5096AA41CADA5DA3D8855722 /* mobileclip2_s0_text.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = mobileclip2_s0_text.mlpackage; sourceTree = SOURCE_ROOT; };
+		5D92985B80B592CAB9C1D5ED /* BirdsEyeView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BirdsEyeView.swift; sourceTree = SOURCE_ROOT; };
 		60BD6F3302DB5D10BD7B1FA8 /* FoundationModelsClusterNamer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FoundationModelsClusterNamer.swift; sourceTree = SOURCE_ROOT; };
 		6CB14C253AFF6198FEA8C2D9 /* mobileclip2_s0_image.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = mobileclip2_s0_image.mlpackage; sourceTree = SOURCE_ROOT; };
 		7C0CBDBC1379701F306A1B50 /* PhotoDepthExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PhotoDepthExtractor.swift; sourceTree = SOURCE_ROOT; };
 		7C2E8B2038ACCF39A539DC98 /* clip_merges.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = clip_merges.txt; sourceTree = "<group>"; };
+		93B8DE102938B809016716A8 /* LiveRecognitionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveRecognitionView.swift; sourceTree = SOURCE_ROOT; };
 		97DBAD25E133E86AFE360818 /* MobileCLIPService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileCLIPService.swift; sourceTree = "<group>"; };
 		9982695F2E37BD6000572E3C /* Vision Builder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Vision Builder.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9982696C2E37BD6100572E3C /* Vision BuilderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Vision BuilderTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -150,6 +157,7 @@
 		B124D68CB2958FC59F9E5939 /* UpgradePromptView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UpgradePromptView.swift; sourceTree = "<group>"; };
 		B92008C2CDCC6AAE8C526CE8 /* SAM3ConceptService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SAM3ConceptService.swift; sourceTree = SOURCE_ROOT; };
 		C0D100FFD5BF9028DCEF7CA2 /* yolo26n.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = yolo26n.mlpackage; sourceTree = SOURCE_ROOT; };
+		DE19F3D31C2EB484FE5FAE41 /* yoloe11s_pf.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = yoloe11s_pf.mlpackage; sourceTree = SOURCE_ROOT; };
 		E417A67E74224E364E5B8608 /* AutoLabelService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AutoLabelService.swift; sourceTree = "<group>"; };
 		EE07F701F1AC0699583CB401 /* CLIPTokenizer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CLIPTokenizer.swift; sourceTree = "<group>"; };
 		F2269046C585E9B5FC4A3A99 /* YOLOObjectDetector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = YOLOObjectDetector.swift; sourceTree = "<group>"; };
@@ -278,6 +286,10 @@
 				C0D100FFD5BF9028DCEF7CA2 /* yolo26n.mlpackage */,
 				F23B54B3B5F1830EAB086B1F /* yolo26_class_names.txt */,
 				7C0CBDBC1379701F306A1B50 /* PhotoDepthExtractor.swift */,
+				DE19F3D31C2EB484FE5FAE41 /* yoloe11s_pf.mlpackage */,
+				3281B6CDC0E376620825105C /* yoloe_classes.json */,
+				93B8DE102938B809016716A8 /* LiveRecognitionView.swift */,
+				5D92985B80B592CAB9C1D5ED /* BirdsEyeView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -427,6 +439,8 @@
 				AE980E2E27FDE14EBF8D5B1B /* mobileclip2_s0_text.mlpackage in Resources */,
 				60754559EF10917667CD3EF3 /* yolo26n.mlpackage in Resources */,
 				B6F90EB82034892736E8C016 /* yolo26_class_names.txt in Resources */,
+				6B3369E954E0B7B159D6CBB7 /* yoloe11s_pf.mlpackage in Resources */,
+				29C7F40AE70E9945ADCBE3E8 /* yoloe_classes.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -499,6 +513,8 @@
 				1C7341F78F23C6DEC5307AF8 /* SAM3ConceptService.swift in Sources */,
 				799EE588B394F5906A89ECE4 /* FoundationModelsClusterNamer.swift in Sources */,
 				C7FA2997FD3FA0E8EDDEA178 /* PhotoDepthExtractor.swift in Sources */,
+				4910026BAC81D93E4BE1990A /* LiveRecognitionView.swift in Sources */,
+				1BC60224FCE48A132BF0ED38 /* BirdsEyeView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -661,7 +677,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = B9RA6QH559;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -697,7 +713,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = B9RA6QH559;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -732,7 +748,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = B9RA6QH559;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -754,7 +770,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = B9RA6QH559;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -775,7 +791,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = B9RA6QH559;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
@@ -795,7 +811,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = B9RA6QH559;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;

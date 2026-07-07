@@ -269,9 +269,9 @@ class SAM2CoreMLProcessor {
                 }
             }
 
-            // Limit to reasonable number
-            if detectedBoxes.count >= 5 {
-                print("✅ Reached 5 objects, stopping")
+            // User-configurable cap (Settings → Detection → Max Objects)
+            if detectedBoxes.count >= AppSettings.SAM2.maxAutoDetections {
+                print("✅ Reached \(AppSettings.SAM2.maxAutoDetections) objects (settings cap), stopping")
                 break
             }
         }

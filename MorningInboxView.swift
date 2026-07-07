@@ -201,13 +201,15 @@ struct MorningInboxView: View {
                             .stroke(Color.appOrange.opacity(0.2), lineWidth: 4)
                             .frame(width: 44, height: 44)
 
+                        // Ring tracks review progress (labeled + skipped both count
+                        // as "dealt with"); the completion screen splits them out
                         Circle()
-                            .trim(from: 0, to: CGFloat(progress.labeled) / CGFloat(max(1, total)))
+                            .trim(from: 0, to: CGFloat(progress.labeled + progress.skipped) / CGFloat(max(1, total)))
                             .stroke(Color.appOrange, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                             .frame(width: 44, height: 44)
                             .rotationEffect(.degrees(-90))
 
-                        Text("\(Int(Float(progress.labeled) / Float(max(1, total)) * 100))%")
+                        Text("\(Int(Float(progress.labeled + progress.skipped) / Float(max(1, total)) * 100))%")
                             .font(.caption2.bold())
                             .foregroundColor(.appOrange)
                     }
@@ -224,7 +226,7 @@ struct MorningInboxView: View {
 
                         RoundedRectangle(cornerRadius: 2)
                             .fill(Color.appOrange)
-                            .frame(width: geo.size.width * CGFloat(progress.labeled) / CGFloat(max(1, total)), height: 4)
+                            .frame(width: geo.size.width * CGFloat(progress.labeled + progress.skipped) / CGFloat(max(1, total)), height: 4)
                     }
                 }
                 .frame(height: 4)
@@ -495,6 +497,7 @@ struct MorningInboxView: View {
     private var completeView: some View {
         let progress = controller.getProgress()
         let labeled = progress.labeled
+        let skipped = progress.skipped
         let didLabelAnything = labeled > 0
 
         return VStack(spacing: 24) {
@@ -509,12 +512,16 @@ struct MorningInboxView: View {
             }
 
             VStack(spacing: 8) {
-                Text(didLabelAnything ? "All Done!" : "Inbox is Empty")
+                Text(didLabelAnything ? "All Done!" : (skipped > 0 ? "Review Complete" : "Inbox is Empty"))
                     .font(.largeTitle.bold())
 
                 Text(didLabelAnything
-                     ? "Labeled \(labeled) cluster\(labeled == 1 ? "" : "s")"
-                     : "Scan your photo library from the Dataset tab to discover objects to label.")
+                     ? (skipped > 0
+                        ? "Labeled \(labeled), skipped \(skipped) cluster\(skipped == 1 ? "" : "s")"
+                        : "Labeled \(labeled) cluster\(labeled == 1 ? "" : "s")")
+                     : (skipped > 0
+                        ? "Skipped all \(skipped) clusters — nothing was labeled."
+                        : "Scan your photo library from the Dataset tab to discover objects to label."))
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)

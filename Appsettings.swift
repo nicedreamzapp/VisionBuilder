@@ -19,8 +19,11 @@ struct AppSettings {
         /// Input size for SAM2 models (always 1024x1024)
         static let inputSize: CGFloat = 1024
 
-        /// Maximum number of auto-detected objects
-        static var maxAutoDetections: Int = 5
+        /// Maximum number of auto-detected objects (user-facing; persisted)
+        static var maxAutoDetections: Int {
+            get { UserDefaults.standard.object(forKey: "settings.sam2.maxAutoDetections") as? Int ?? 5 }
+            set { UserDefaults.standard.set(newValue, forKey: "settings.sam2.maxAutoDetections") }
+        }
 
         /// Minimum detection area as fraction of image (0.005 = 0.5%)
         static var minDetectionArea: Float = 0.005
@@ -35,14 +38,20 @@ struct AppSettings {
     // MARK: - Active Learning Settings
     
     struct ActiveLearning {
-        /// Number of "Yes" confirmations required before auto-accepting remaining candidates
-        static var autoAcceptThreshold: Int = 3
-        
+        /// Number of "Yes" confirmations required before auto-accepting remaining candidates (user-facing; persisted)
+        static var autoAcceptThreshold: Int {
+            get { UserDefaults.standard.object(forKey: "settings.al.autoAcceptThreshold") as? Int ?? 3 }
+            set { UserDefaults.standard.set(newValue, forKey: "settings.al.autoAcceptThreshold") }
+        }
+
         /// Maximum number of candidates to show in confirmation flow
         static var maxCandidatesToShow: Int = 20
-        
-        /// Whether to automatically accept very high confidence matches
-        static var enableAutoAccept: Bool = true
+
+        /// Whether to automatically accept very high confidence matches (user-facing; persisted)
+        static var enableAutoAccept: Bool {
+            get { UserDefaults.standard.object(forKey: "settings.al.enableAutoAccept") as? Bool ?? true }
+            set { UserDefaults.standard.set(newValue, forKey: "settings.al.enableAutoAccept") }
+        }
     }
     
     // MARK: - Similarity Search Settings
@@ -112,8 +121,10 @@ struct AppSettings {
         /// Maximum cluster size before splitting
         static var maxClusterSize: Int = 100
         
-        /// Distance threshold for DBSCAN clustering
-        static var dbscanEpsilon: Float = 0.15
+        /// Distance threshold for DBSCAN clustering (euclidean on L2-normalized
+        /// embeddings). 0.9 measured as the working value for MobileCLIP2 —
+        /// 0.15 produced only singletons on real photos.
+        static var dbscanEpsilon: Float = 0.9
         
         /// Minimum points for DBSCAN core
         static var dbscanMinPoints: Int = 2
@@ -122,17 +133,20 @@ struct AppSettings {
     // MARK: - UI Settings
     
     struct UI {
-        /// Show similarity percentage in confirmation view
-        static var showSimilarityScore: Bool = true
-        
-        /// Enable haptic feedback on button presses
-        static var enableHaptics: Bool = true
-        
+        /// Show similarity percentage in confirmation view (user-facing; persisted)
+        static var showSimilarityScore: Bool {
+            get { UserDefaults.standard.object(forKey: "settings.ui.showSimilarityScore") as? Bool ?? true }
+            set { UserDefaults.standard.set(newValue, forKey: "settings.ui.showSimilarityScore") }
+        }
+
+        /// Enable haptic feedback on button presses (user-facing; persisted)
+        static var enableHaptics: Bool {
+            get { UserDefaults.standard.object(forKey: "settings.ui.enableHaptics") as? Bool ?? true }
+            set { UserDefaults.standard.set(newValue, forKey: "settings.ui.enableHaptics") }
+        }
+
         /// Animation duration for transitions (seconds)
         static var transitionDuration: Double = 0.3
-        
-        /// Show debug information in UI
-        static var showDebugInfo: Bool = false
     }
     
     // MARK: - Performance Settings
@@ -191,13 +205,12 @@ struct AppSettings {
 
         Clustering.minClusterSize = 1
         Clustering.maxClusterSize = 100
-        Clustering.dbscanEpsilon = 0.15
+        Clustering.dbscanEpsilon = 0.9
         Clustering.dbscanMinPoints = 2
 
         UI.showSimilarityScore = true
         UI.enableHaptics = true
         UI.transitionDuration = 0.3
-        UI.showDebugInfo = false
 
         Performance.indexingConcurrency = 4
         Performance.imageCacheMaxSize = 200
@@ -237,6 +250,14 @@ struct SettingsView: View {
     @State private var showDatabaseResetConfirmation = false
     @State private var showDatabaseResetSuccess = false
     @Environment(\.dismiss) private var dismiss
+
+    // Same UserDefaults keys AppSettings reads — @AppStorage keeps the UI
+    // live-updating while the engine sees the same persisted values
+    @AppStorage("settings.sam2.maxAutoDetections") private var maxAutoDetections = 5
+    @AppStorage("settings.al.enableAutoAccept") private var enableAutoAccept = true
+    @AppStorage("settings.al.autoAcceptThreshold") private var autoAcceptThreshold = 3
+    @AppStorage("settings.ui.showSimilarityScore") private var showSimilarityScore = true
+    @AppStorage("settings.ui.enableHaptics") private var enableHaptics = true
 
     var body: some View {
         NavigationStack {
@@ -289,31 +310,19 @@ struct SettingsView: View {
 
                 // Detection Settings
                 Section {
-                    Stepper("Max Objects: \(AppSettings.SAM2.maxAutoDetections)",
-                            value: Binding(
-                                get: { AppSettings.SAM2.maxAutoDetections },
-                                set: { AppSettings.SAM2.maxAutoDetections = $0 }
-                            ),
-                            in: 1...10)
+                    Stepper("Max Objects: \(maxAutoDetections)", value: $maxAutoDetections, in: 1...10)
                 } header: {
                     Label("Detection", systemImage: "viewfinder")
+                } footer: {
+                    Text("How many objects Auto-Detect will find per photo before stopping.")
                 }
 
                 // Active Learning Settings
                 Section {
-                    Toggle("Auto-Accept High Confidence",
-                           isOn: Binding(
-                               get: { AppSettings.ActiveLearning.enableAutoAccept },
-                               set: { AppSettings.ActiveLearning.enableAutoAccept = $0 }
-                           ))
+                    Toggle("Auto-Accept High Confidence", isOn: $enableAutoAccept)
 
-                    if AppSettings.ActiveLearning.enableAutoAccept {
-                        Stepper("After \(AppSettings.ActiveLearning.autoAcceptThreshold) confirmations",
-                                value: Binding(
-                                    get: { AppSettings.ActiveLearning.autoAcceptThreshold },
-                                    set: { AppSettings.ActiveLearning.autoAcceptThreshold = $0 }
-                                ),
-                                in: 1...10)
+                    if enableAutoAccept {
+                        Stepper("After \(autoAcceptThreshold) confirmations", value: $autoAcceptThreshold, in: 1...10)
                     }
                 } header: {
                     Label("Active Learning", systemImage: "brain")
@@ -323,43 +332,10 @@ struct SettingsView: View {
 
                 // UI Settings
                 Section {
-                    Toggle("Show Similarity Scores",
-                           isOn: Binding(
-                               get: { AppSettings.UI.showSimilarityScore },
-                               set: { AppSettings.UI.showSimilarityScore = $0 }
-                           ))
-
-                    Toggle("Haptic Feedback",
-                           isOn: Binding(
-                               get: { AppSettings.UI.enableHaptics },
-                               set: { AppSettings.UI.enableHaptics = $0 }
-                           ))
-
-                    Toggle("Debug Mode",
-                           isOn: Binding(
-                               get: { AppSettings.UI.showDebugInfo },
-                               set: { AppSettings.UI.showDebugInfo = $0 }
-                           ))
+                    Toggle("Show Similarity Scores", isOn: $showSimilarityScore)
+                    Toggle("Haptic Feedback", isOn: $enableHaptics)
                 } header: {
                     Label("Interface", systemImage: "paintbrush")
-                }
-
-                // Performance Settings
-                Section {
-                    Toggle("Background Processing",
-                           isOn: Binding(
-                               get: { AppSettings.Performance.enableBackgroundProcessing },
-                               set: { AppSettings.Performance.enableBackgroundProcessing = $0 }
-                           ))
-
-                    Stepper("Parallel Tasks: \(AppSettings.Performance.indexingConcurrency)",
-                            value: Binding(
-                                get: { AppSettings.Performance.indexingConcurrency },
-                                set: { AppSettings.Performance.indexingConcurrency = $0 }
-                            ),
-                            in: 1...8)
-                } header: {
-                    Label("Performance", systemImage: "gauge.with.needle")
                 }
 
                 // Reset Section
@@ -388,7 +364,7 @@ struct SettingsView: View {
                 // About Section
                 Section {
                     LabeledContent("SAM2 Model", value: AppSettings.SAM2.modelName)
-                    LabeledContent("Version", value: "1.0.0")
+                    LabeledContent("Version", value: MainTabView.versionString)
                 } header: {
                     Label("About", systemImage: "info.circle")
                 }
@@ -406,6 +382,11 @@ struct SettingsView: View {
                 Button("Cancel", role: .cancel) { }
                 Button("Reset", role: .destructive) {
                     AppSettings.resetToDefaults()
+                    maxAutoDetections = 5
+                    enableAutoAccept = true
+                    autoAcceptThreshold = 3
+                    showSimilarityScore = true
+                    enableHaptics = true
                 }
             } message: {
                 Text("This will reset all settings to their default values.")

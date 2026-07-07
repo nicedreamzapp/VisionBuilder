@@ -441,11 +441,13 @@ struct LabelingFlowView: View {
     @State private var currentIndex: Int = 0
     @State private var totalLabeled: Int = 0
     @State private var showingExitConfirmation = false
+    @State private var currentBoxes: [LabeledBox] = []
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {
-            // Main labeling editor
+            // Main labeling editor — .id forces a fresh editor (and box state)
+            // per image so restored/in-progress boxes never bleed across photos
             LabelingEditorView(
                 image: images[currentIndex],
                 onSelectNewPhoto: { },
@@ -457,8 +459,13 @@ struct LabelingFlowView: View {
                 autoStartSegmentation: true,
                 onLabeledCountChanged: { count in
                     totalLabeled += count
+                },
+                initialBoxes: session?.loadLabeledBoxes(forImageIndex: currentIndex) ?? [],
+                onBoxesChanged: { boxes in
+                    currentBoxes = boxes
                 }
             )
+            .id(currentIndex)
 
             // Progress overlay
             VStack {
@@ -560,7 +567,8 @@ struct LabelingFlowView: View {
     }
 
     private func advanceToNext() {
-        // Save progress
+        // Next image starts with a clean slate
+        currentBoxes = []
         sessionManager.saveProgress(
             index: currentIndex + 1,
             labeledCount: totalLabeled,
@@ -575,10 +583,11 @@ struct LabelingFlowView: View {
     }
 
     private func saveAndExit() {
+        // Persist in-progress boxes so resume restores drawn-but-unlabeled work
         sessionManager.saveProgress(
             index: currentIndex,
             labeledCount: totalLabeled,
-            boxes: []
+            boxes: currentBoxes
         )
         onSaveProgress()
     }

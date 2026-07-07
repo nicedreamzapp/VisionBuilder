@@ -14,6 +14,7 @@ struct DatasetTabView: View {
     @State private var isRefreshing = false
     @State private var selectedFolder: LabelFolder?
     @State private var showingExportOptions = false
+    @State private var showingBirdsEye = false
     @State private var showingDeleteConfirmation = false
     @State private var folderToDelete: LabelFolder?
 
@@ -71,6 +72,13 @@ struct DatasetTabView: View {
                         }
                         .disabled(datasetManager.labelFolders.isEmpty)
 
+                        Button {
+                            showingBirdsEye = true
+                        } label: {
+                            Label("Bird's Eye View", systemImage: "square.grid.3x3")
+                        }
+                        .disabled(datasetManager.labelFolders.isEmpty)
+
                         Divider()
 
                         Button {
@@ -106,6 +114,10 @@ struct DatasetTabView: View {
             }
             .sheet(isPresented: $showingExportOptions) {
                 ExportOptionsView(exportManager: exportManager, isPresented: $showingExportOptions)
+                    .environmentObject(datasetManager)
+            }
+            .fullScreenCover(isPresented: $showingBirdsEye) {
+                BirdsEyeView()
                     .environmentObject(datasetManager)
             }
             .navigationDestination(item: $selectedFolder) { folder in

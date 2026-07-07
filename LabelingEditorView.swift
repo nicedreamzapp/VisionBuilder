@@ -18,6 +18,12 @@ struct LabelingEditorView: View {
     // Callback for labeled count changes
     let onLabeledCountChanged: ((Int) -> Void)?
 
+    // Boxes to restore when resuming a saved session
+    var initialBoxes: [LabeledBox] = []
+
+    // Reports box changes upward so session saves can persist in-progress work
+    var onBoxesChanged: (([LabeledBox]) -> Void)? = nil
+
     @EnvironmentObject private var datasetManager: DatasetManager
 
     @StateObject private var boxState = BoxState()
@@ -81,23 +87,10 @@ struct LabelingEditorView: View {
                     exportManager.lastError = nil
                 }
             }
-            .navigationBarTitle("SAM 2 Labeling", displayMode: .inline)
-            .navigationBarItems(
-                leading: undoButton,
-                trailing: Button("Done") { onClose() }
-            )
+            // No navigationBarTitle/Items here: this view is presented via
+            // .sheet/.fullScreenCover with no navigation ancestor, so a nav
+            // bar never renders. Undo/Done live in SimplifiedControlPanel.
         }
-    }
-
-    // MARK: - Undo Button
-
-    private var undoButton: some View {
-        Button {
-            performUndo()
-        } label: {
-            Image(systemName: "arrow.uturn.backward")
-        }
-        .disabled(!canUndo)
     }
 
     // MARK: - Quality Indicator
@@ -247,7 +240,9 @@ struct LabelingEditorView: View {
                 sam2DetectionManager: sam2DetectionManager,
                 showLabelDialog: $showLabelDialog,
                 showDatasetBrowser: .constant(false),
-                onReturnToLibrary: onClose
+                onReturnToLibrary: onClose,
+                canUndo: canUndo,
+                onUndo: performUndo
             )
         }
         .padding(.horizontal)
@@ -293,6 +288,7 @@ struct LabelingEditorView: View {
         if let directImage = directImage {
             currentImage = directImage
             boxState.currentImage = directImage
+            restoreInitialBoxesIfNeeded()
             calculateQualityScore(for: directImage)
             triggerAutoSegmentationIfNeeded()
             return
@@ -308,6 +304,7 @@ struct LabelingEditorView: View {
         if let image = UIImage(contentsOfFile: datasetImage.filepath) {
             currentImage = image
             boxState.currentImage = image
+            restoreInitialBoxesIfNeeded()
             calculateQualityScore(for: image)
             triggerAutoSegmentationIfNeeded()
 
@@ -318,6 +315,14 @@ struct LabelingEditorView: View {
         } else {
             ToastManager.shared.showError("Failed to load image", message: "The file may be corrupted")
         }
+    }
+
+    private func restoreInitialBoxesIfNeeded() {
+        guard !initialBoxes.isEmpty, boxState.boxes.isEmpty else { return }
+        boxState.boxes = initialBoxes
+        // Resumed boxes count as existing work — don't auto-segment over them
+        hasStartedAutoSegmentation = true
+        print("↩️ Restored \(initialBoxes.count) in-progress boxes from saved session")
     }
 
     private func triggerAutoSegmentationIfNeeded() {
@@ -368,6 +373,7 @@ struct LabelingEditorView: View {
 
     private func handleBoxesChanged(_ newBoxes: [LabeledBox]) {
         canUndo = !undoStack.isEmpty
+        onBoxesChanged?(newBoxes)
     }
 
     private func pushUndoState() {
@@ -407,7 +413,9 @@ extension LabelingEditorView {
         onClose: @escaping () -> Void,
         qualityManager: DataQualityManager,
         autoStartSegmentation: Bool = false,
-        onLabeledCountChanged: ((Int) -> Void)? = nil
+        onLabeledCountChanged: ((Int) -> Void)? = nil,
+        initialBoxes: [LabeledBox] = [],
+        onBoxesChanged: (([LabeledBox]) -> Void)? = nil
     ) {
         self.datasetImage = DatasetImage.createTemporary(from: image)
         self.onSelectNewPhoto = onSelectNewPhoto
@@ -417,6 +425,8 @@ extension LabelingEditorView {
         self.directImage = image
         self.autoStartSegmentation = autoStartSegmentation
         self.onLabeledCountChanged = onLabeledCountChanged
+        self.initialBoxes = initialBoxes
+        self.onBoxesChanged = onBoxesChanged
     }
 
     /// Initialize with a DatasetImage (for existing dataset images)

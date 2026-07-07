@@ -10,6 +10,7 @@ struct FolderDetailView: View {
     @State private var isLoading = true
     @State private var selectedIndex: Int?
     @State private var showingDeleteConfirmation = false
+    @State private var showingQualityCheck = false
 
     let gridColumns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
 
@@ -34,6 +35,12 @@ struct FolderDetailView: View {
                         Label("Refresh", systemImage: "arrow.clockwise")
                     }
 
+                    Button {
+                        showingQualityCheck = true
+                    } label: {
+                        Label("Check Quality", systemImage: "sparkles.rectangle.stack")
+                    }
+
                     Button(role: .destructive) {
                         showingDeleteConfirmation = true
                     } label: {
@@ -46,6 +53,11 @@ struct FolderDetailView: View {
         }
         .task {
             await loadImages()
+        }
+        .sheet(isPresented: $showingQualityCheck, onDismiss: {
+            Task { await loadImages() } // quality tools can delete images
+        }) {
+            QualityView()
         }
         .alert("Delete '\(folder.name)'?", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) { }

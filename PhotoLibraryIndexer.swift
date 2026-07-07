@@ -452,97 +452,50 @@ class PhotoLibraryIndexer {
     
     private func performDBSCANClustering(on instances: [ObjectInstance]) -> [UnlabeledCluster] {
         print("🔍 Starting DBSCAN clustering on \(instances.count) instances...")
-        
-        // ADJUSTED PARAMETERS for better separation
-        let epsilon: Float = 0.15  // Reduced from 0.25 - stricter similarity requirement
-        let minPoints = 2
-        
+
+        // Measured on real MobileCLIP2 embeddings (offline sim, 2026-07-06):
+        // same-object re-sightings land at cosine 0.34-0.81 ⇒ euclidean 0.6-1.15
+        // on unit vectors. eps 0.15 produced 0% grouping (pure singletons);
+        // 0.9 groups re-sightings while keeping scenes separate.
+        let epsilon: Float = AppSettings.Clustering.dbscanEpsilon
+        let minPoints = 2          // Counts the point itself — a pair of look-alikes clusters
+
+        let memberGroups = ObjectRecognitionEngine.dbscan(
+            embeddings: instances.map { $0.embedding },
+            eps: epsilon,
+            minPts: minPoints
+        )
+
         var clusters: [UnlabeledCluster] = []
-        var visited = Set<UUID>()
-        var clusteredInstances = Set<UUID>()
-        
-        for instance in instances {
-            if visited.contains(instance.id) {
-                continue
-            }
-            visited.insert(instance.id)
-            
-            let neighbors = findNeighbors(of: instance, in: instances, epsilon: epsilon)
-            
-            if neighbors.count >= minPoints {
-                var clusterMembers = [instance]
-                clusteredInstances.insert(instance.id)
-                var neighborQueue = neighbors
-                
-                while !neighborQueue.isEmpty {
-                    let neighbor = neighborQueue.removeFirst()
-                    
-                    if !visited.contains(neighbor.id) {
-                        visited.insert(neighbor.id)
-                        let neighborNeighbors = findNeighbors(of: neighbor, in: instances, epsilon: epsilon)
-                        if neighborNeighbors.count >= minPoints {
-                            neighborQueue.append(contentsOf: neighborNeighbors)
-                        }
-                    }
-                    
-                    if !clusteredInstances.contains(neighbor.id) {
-                        clusterMembers.append(neighbor)
-                        clusteredInstances.insert(neighbor.id)
-                    }
-                }
-                
-                let centroid = calculateCentroid(of: clusterMembers)
+        for group in memberGroups {
+            let clusterMembers = group.map { instances[$0] }
+
+            if clusterMembers.count == 1 {
+                let instance = clusterMembers[0]
+                let cluster = UnlabeledCluster(
+                    instances: [instance],
+                    centroidEmbedding: instance.embedding
+                )
+                cluster.clipCentroidEmbedding = instance.clipEmbedding
+                clusters.append(cluster)
+            } else {
                 let cluster = UnlabeledCluster(
                     instances: clusterMembers,
-                    centroidEmbedding: centroid
+                    centroidEmbedding: calculateCentroid(of: clusterMembers)
                 )
                 cluster.clipCentroidEmbedding = calculateClipCentroid(of: clusterMembers)
-
                 print("  Created cluster with \(clusterMembers.count) instances")
                 clusters.append(cluster)
             }
         }
-        
-        // Add singleton clusters for unclustered instances
-        let unclusteredInstances = instances.filter { !clusteredInstances.contains($0.id) }
-        print("  🔸 Found \(unclusteredInstances.count) unclustered instances (singletons)")
-        
-        for instance in unclusteredInstances {
-            let cluster = UnlabeledCluster(
-                instances: [instance],
-                centroidEmbedding: instance.embedding
-            )
-            cluster.clipCentroidEmbedding = instance.clipEmbedding
-            clusters.append(cluster)
-        }
-        
+
         print("✅ DBSCAN complete: \(clusters.count) total clusters")
         print("  - Multi-instance clusters: \(clusters.filter { $0.instances.count > 1 }.count)")
         print("  - Singleton clusters: \(clusters.filter { $0.instances.count == 1 }.count)")
-        
+
         return clusters
     }
-    
-    private func findNeighbors(
-        of instance: ObjectInstance,
-        in instances: [ObjectInstance],
-        epsilon: Float
-    ) -> [ObjectInstance] {
-        let embedding = instance.embedding
-        var neighbors: [ObjectInstance] = []
-        
-        for candidate in instances {
-            if candidate.id == instance.id {
-                continue
-            }
-            let distance = euclideanDistance(embedding, candidate.embedding)
-            if distance <= epsilon {
-                neighbors.append(candidate)
-            }
-        }
-        return neighbors
-    }
-    
+
     private func calculateCentroid(of instances: [ObjectInstance]) -> [Float] {
         guard !instances.isEmpty else { return [] }
         
@@ -650,16 +603,6 @@ class PhotoLibraryIndexer {
         }
 
         return resultImage
-    }
-    
-    private func euclideanDistance(_ a: [Float], _ b: [Float]) -> Float {
-        guard a.count == b.count else { return Float.infinity }
-        var sum: Float = 0.0
-        for i in 0..<a.count {
-            let diff = a[i] - b[i]
-            sum += diff * diff
-        }
-        return sqrt(sum)
     }
 }
 
