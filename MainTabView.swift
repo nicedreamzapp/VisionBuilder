@@ -11,6 +11,7 @@ struct MainTabView: View {
     @StateObject private var datasetManager = DatasetManager()
     @State private var selectedTab = 1 // Start on Dataset tab
     @State private var recognitionEngine: ObjectRecognitionEngine?
+    @State private var pendingClusterCount = 0
 
     // Dynamic accent color based on selected tab
     private var tabAccentColor: Color {
@@ -44,13 +45,14 @@ struct MainTabView: View {
                 .environmentObject(exportManager)
                 .environmentObject(datasetManager)
 
-            // Morning Inbox Tab
+            // Morning Inbox Tab — badge shows how many groups wait for a name
             if let engine = recognitionEngine {
                 MorningInboxView(recognitionEngine: engine)
                     .tabItem {
                         Label("Inbox", systemImage: "tray.fill")
                     }
                     .tag(2)
+                    .badge(pendingClusterCount)
                     .modelContainer(ObjectRecognitionStorage.shared.container)
             } else {
                 ProgressView()
@@ -79,6 +81,10 @@ struct MainTabView: View {
                 if AppSettings.UI.enableHaptics {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
+                refreshPendingCount()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .datasetDidReset)) { _ in
+                refreshPendingCount()
             }
             .onAppear {
                 // Custom tab bar appearance
@@ -93,6 +99,7 @@ struct MainTabView: View {
                 if recognitionEngine == nil {
                     recognitionEngine = ObjectRecognitionEngine()
                 }
+                refreshPendingCount()
             }
             .onReceive(NotificationCenter.default.publisher(for: .switchToLabelTab)) { _ in
                 selectedTab = 0
@@ -115,6 +122,10 @@ struct MainTabView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 1)
             .allowsHitTesting(false)
+    }
+
+    private func refreshPendingCount() {
+        pendingClusterCount = (try? recognitionEngine?.getPendingClusters().count) ?? 0
     }
 
     static var versionString: String {
