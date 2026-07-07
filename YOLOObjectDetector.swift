@@ -16,8 +16,11 @@ struct DetectedObject {
     let confidence: Float
     let rect: CGRect          // Normalized 0-1 coordinates
     let centerPoint: CGPoint  // Normalized center for SAM2
-    // Per-object segmentation mask cropped to rect (alpha bitmap), YOLOE only
+    // Per-object segmentation mask (luminance bitmap), YOLOE only.
+    // maskRect is the mask's own normalized region — cell-aligned, so it can
+    // be slightly larger than rect; render the mask there, not squeezed into rect.
     var maskImage: CGImage? = nil
+    var maskRect: CGRect? = nil
 }
 
 class YOLOObjectDetector {
@@ -283,23 +286,30 @@ class YOLOObjectDetector {
             }
         }
         return kept.map {
-            DetectedObject(className: $0.className, confidence: $0.score, rect: $0.rect,
-                           centerPoint: CGPoint(x: $0.rect.midX, y: $0.rect.midY),
-                           maskImage: makeMask(anchor: $0.anchor, box640: $0.box640,
-                                               coeffs: coeffArr, protos: protoArr))
+            let mask = makeMask(anchor: $0.anchor, box640: $0.box640,
+                                coeffs: coeffArr, protos: protoArr,
+                                letterbox: letterbox,
+                                imageWidth: imageWidth, imageHeight: imageHeight)
+            return DetectedObject(className: $0.className, confidence: $0.score, rect: $0.rect,
+                                  centerPoint: CGPoint(x: $0.rect.midX, y: $0.rect.midY),
+                                  maskImage: mask?.image, maskRect: mask?.rect)
         }
     }
 
     // MARK: - YOLOE instance masks
 
     /// mask = coeffs(32) · protos(32×160×160), thresholded at logit 0 (= sigmoid 0.5),
-    /// cropped to the detection box. Returns an alpha bitmap the UI can tint.
+    /// cropped to the detection box. Returns a luminance bitmap (render with
+    /// .luminanceToAlpha()) plus its own normalized image-space rect.
     private func makeMask(
         anchor: Int,
         box640: (cx: Float, cy: Float, w: Float, h: Float),
         coeffs: MLMultiArray?,
-        protos: MLMultiArray?
-    ) -> CGImage? {
+        protos: MLMultiArray?,
+        letterbox: (scale: Float, padX: Int, padY: Int),
+        imageWidth: Int,
+        imageHeight: Int
+    ) -> (image: CGImage, rect: CGRect)? {
         guard let coeffs, let protos else { return nil }
         let maskSide = 160
         let cells = maskSide * maskSide
@@ -364,15 +374,30 @@ class YOLOObjectDetector {
         }
 
         let data = Data(pixels)
-        guard let provider = CGDataProvider(data: data as CFData) else { return nil }
-        return CGImage(
-            width: cw, height: ch,
-            bitsPerComponent: 8, bitsPerPixel: 8, bytesPerRow: cw,
-            space: CGColorSpaceCreateDeviceGray(),
-            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
-            provider: provider, decode: nil, shouldInterpolate: true,
-            intent: .defaultIntent
+        guard let provider = CGDataProvider(data: data as CFData),
+              let image = CGImage(
+                  width: cw, height: ch,
+                  bitsPerComponent: 8, bitsPerPixel: 8, bytesPerRow: cw,
+                  space: CGColorSpaceCreateDeviceGray(),
+                  bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
+                  provider: provider, decode: nil, shouldInterpolate: true,
+                  intent: .defaultIntent
+              ) else { return nil }
+
+        // The crop region is cell-aligned (4px cells), so it's slightly larger
+        // than the box — report its own rect so rendering doesn't distort it.
+        let (lbScale, lbPadX, lbPadY) = letterbox
+        let rx0 = (Float(x0) * cellScale - Float(lbPadX)) / lbScale
+        let ry0 = (Float(y0) * cellScale - Float(lbPadY)) / lbScale
+        let rw = Float(cw) * cellScale / lbScale
+        let rh = Float(ch) * cellScale / lbScale
+        let rect = CGRect(
+            x: CGFloat(rx0 / Float(imageWidth)),
+            y: CGFloat(ry0 / Float(imageHeight)),
+            width: CGFloat(rw / Float(imageWidth)),
+            height: CGFloat(rh / Float(imageHeight))
         )
+        return (image, rect)
     }
 
     private var cachedProtos: [Float]?

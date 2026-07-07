@@ -22,7 +22,8 @@ struct LiveDetection: Identifiable {
     let confidence: Float
     let identityLabel: String?    // learned identity name if matched
     let identitySimilarity: Float?
-    let maskImage: CGImage?       // instance segmentation, cropped to rect
+    let maskImage: CGImage?       // instance segmentation (luminance bitmap)
+    let maskRect: CGRect?         // the mask's own normalized region
 }
 
 // MARK: - Camera session provider
@@ -215,22 +216,31 @@ struct LiveRecognitionView: View {
         let frame = boxFrame(det.rect, in: size)
         let isMine = det.identityLabel != nil
 
-        ZStack(alignment: .topLeading) {
-            // Segmentation silhouette — the object's actual shape, no rectangles
-            if let mask = det.maskImage {
-                (isMine ? Color.green : Color.white)
-                    .opacity(isMine ? 0.45 : 0.14)
-                    .mask(
-                        Image(decorative: mask, scale: 1)
-                            .resizable()
-                            .interpolation(.medium)
-                    )
-            } else if isMine {
-                // Fallback if a mask is unavailable for a matched object
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.green, lineWidth: 3)
-            }
+        // Segmentation silhouette drawn at the mask's OWN rect (cell-aligned,
+        // slightly larger than the box) so the shape isn't squeezed or offset.
+        // .luminanceToAlpha() is essential: the mask bitmap is grayscale, and
+        // SwiftUI's .mask() reads alpha — without it the mask is a solid box.
+        if let mask = det.maskImage {
+            let maskFrame = boxFrame(det.maskRect ?? det.rect, in: size)
+            (isMine ? Color.green : Color.white)
+                .opacity(isMine ? 0.5 : 0.16)
+                .mask(
+                    Image(decorative: mask, scale: 1)
+                        .resizable()
+                        .interpolation(.medium)
+                        .luminanceToAlpha()
+                )
+                .frame(width: maskFrame.width, height: maskFrame.height)
+                .position(x: maskFrame.midX, y: maskFrame.midY)
+        } else if isMine {
+            // Fallback if a mask is unavailable for a matched object
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.green, lineWidth: 3)
+                .frame(width: frame.width, height: frame.height)
+                .position(x: frame.midX, y: frame.midY)
+        }
 
+        Group {
             if isMine {
                 Text("\(det.identityLabel!) \(Int((det.identitySimilarity ?? 0) * 100))%")
                     .font(.caption.bold())
@@ -238,7 +248,6 @@ struct LiveRecognitionView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(Capsule().fill(Color.green))
-                    .offset(y: -24)
             } else {
                 Text(det.genericLabel)
                     .font(.caption2)
@@ -246,11 +255,9 @@ struct LiveRecognitionView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(Capsule().fill(.black.opacity(0.35)))
-                    .offset(y: -20)
             }
         }
-        .frame(width: frame.width, height: frame.height)
-        .position(x: frame.midX, y: frame.midY)
+        .position(x: frame.midX, y: max(12, frame.minY - 14))
     }
 
     private func boxFrame(_ norm: CGRect, in viewSize: CGSize) -> CGRect {
@@ -346,7 +353,8 @@ struct LiveRecognitionView: View {
                 confidence: det.confidence,
                 identityLabel: identityLabel,
                 identitySimilarity: identitySim,
-                maskImage: det.maskImage
+                maskImage: det.maskImage,
+                maskRect: det.maskRect
             ))
         }
         return results
