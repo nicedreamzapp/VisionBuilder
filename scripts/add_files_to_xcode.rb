@@ -10,6 +10,8 @@ PROJECT_PATH = ROOT.join('Vision Builder.xcodeproj').to_s
 TARGET_NAME = 'Vision Builder'
 
 SWIFT_FILES = %w[
+  SeededInboxView.swift
+  DINOv2Service.swift
   SAM3ConceptService.swift
   FoundationModelsClusterNamer.swift
   PhotoDepthExtractor.swift
@@ -18,6 +20,7 @@ SWIFT_FILES = %w[
 
 # .mlpackage are directories — added as folder references and bundled as resources.
 ML_PACKAGES = %w[
+  dinov2_small_fp16.mlpackage
   mobileclip2_s0_image.mlpackage
   mobileclip2_s0_text.mlpackage
   yolo26n.mlpackage

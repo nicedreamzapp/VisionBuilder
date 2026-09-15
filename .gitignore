@@ -103,3 +103,7 @@ Thumbs.db
 *.xcresult
 libtorch_ios-1.13.0.zip
 es_final_with_rules.json
+
+# 41 MB identity embedder — regenerate with scripts/convert_dinov2.py
+dinov2_small_fp16.mlpackage/
+dinov2_small_fp32.mlpackage/

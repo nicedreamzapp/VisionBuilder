@@ -9,7 +9,8 @@ import SwiftData
 struct MainTabView: View {
     @StateObject private var exportManager = ExportManager()
     @StateObject private var datasetManager = DatasetManager()
-    @State private var selectedTab = 1 // Start on Dataset tab
+    // Land on the naming flow when seeded groups are waiting, else Dataset.
+    @State private var selectedTab = SeededStore.isAvailable ? 5 : 1
     @State private var recognitionEngine: ObjectRecognitionEngine?
     @State private var pendingClusterCount = 0
 
@@ -21,6 +22,7 @@ struct MainTabView: View {
         case 2: return .appOrange    // Inbox tab
         case 3: return .appPurple    // Insights tab
         case 4: return .appTeal      // Live tab
+        case 5: return .appBlue      // Name tab
         default: return .appBlue
         }
     }
@@ -60,6 +62,15 @@ struct MainTabView: View {
                         Label("Inbox", systemImage: "tray.fill")
                     }
                     .tag(2)
+            }
+
+            // Name Tab — pre-computed groups from a Mac run, only when seeded
+            if SeededStore.isAvailable {
+                SeededInboxView()
+                    .tabItem {
+                        Label("Name", systemImage: "tag.fill")
+                    }
+                    .tag(5)
             }
 
             // Insights Tab
