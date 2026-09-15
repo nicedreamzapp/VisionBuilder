@@ -19,6 +19,7 @@
 [![SAM 2.1](https://img.shields.io/badge/SAM-2.1-FF2D55?style=for-the-badge)](https://ai.meta.com/sam2/)
 [![MobileCLIP 2](https://img.shields.io/badge/MobileCLIP-2-AF52DE?style=for-the-badge&logo=apple)](https://huggingface.co/apple/MobileCLIP2-S0)
 [![YOLO 26](https://img.shields.io/badge/YOLO-26-00C7BE?style=for-the-badge)](https://docs.ultralytics.com/)
+[![DINOv2](https://img.shields.io/badge/DINOv2-identity-FF375F?style=for-the-badge)](https://github.com/facebookresearch/dinov2)
 
 </div>
 
@@ -30,6 +31,41 @@
 > This is an **ongoing project**. Things are half-built. Buttons sometimes lie. Empty states are awkward. The roadmap is longer than the README. We're shipping in the open because the core idea is too good to wait for "done."
 >
 > **If you find rough edges — that's the point.** Tell us. Or fix it. PRs welcome.
+
+<br/>
+
+---
+
+## 📑 Contents
+
+<table>
+<tr>
+<td valign="top" width="33%">
+
+**🚀 Start here**
+- [✨ The vision](#-the-vision-what-finished-actually-looks-like)
+- [🐕 Does it work?](#-does-it-actually-work-yes--here-are-the-numbers)
+- [🤔 Why build it](#-why-were-building-it)
+
+</td>
+<td valign="top" width="33%">
+
+**🔬 Under the hood**
+- [⚙️ How it works](#️-how-it-works-today)
+- [📦 What's working](#-whats-actually-working-right-now)
+- [🛠️ Tech stack](#️-tech-stack)
+
+</td>
+<td valign="top" width="33%">
+
+**🧑‍💻 Get going**
+- [🧰 Requirements](#-requirements)
+- [🚀 Build it](#-build-it-yourself)
+- [🗺️ Roadmap](#️-roadmap)
+
+</td>
+</tr>
+</table>
 
 <br/>
 
@@ -73,6 +109,57 @@ The end state is a tool you walk around your space with for an afternoon and wal
 
 ---
 
+## 🐕 Does it actually work? Yes — here are the numbers
+
+Not a benchmark. **4,959 photos off one real iPhone camera roll**, three dogs the owner then identified by name.
+
+<table>
+<tr><td width="50%">
+
+### 🆔 DINOv2 — identity
+*"which dog is this"*
+
+| Dog | Found | Correct |
+|:--|:--|:--|
+| 🐶 Shanti | 26 | **26 / 26** |
+| 🐕 Theo | 28 | **27 / 28** |
+| 🐩 Rupert | 9 | **9 / 9** |
+
+✅ **All three kept apart** at cosine distance 0.75.
+
+</td><td width="50%">
+
+### 🚫 CLIP — semantics
+*"is this a dog"*
+
+| Threshold | Result |
+|:--|:--|
+| Loose (0.45) | 🫠 all 86 dogs → **one blob of 83** |
+| Tighter | 💥 everything → **singletons** |
+| Anywhere between | ❌ **doesn't exist** |
+
+⚠️ **No working range at any setting.**
+
+</td></tr>
+</table>
+
+> [!IMPORTANT]
+> This is *why* the early clustering never worked, and it was never a tuning problem.
+> CLIP is trained to tell a chair from a lamp — not **your** chair from **mine**.
+> Identity needs an identity embedder. 🎯
+
+### 🧱 And here's what it genuinely **cannot** do
+
+| ❌ Limit | 🔍 What we measured |
+|:--|:--|
+| **Identical mass-produced things** | 28 *different* shipping labels over 886 days → one tight cluster. For inventory, identity isn't in the pixels at all. |
+| **Same-breed poultry** | 🦆 Ducks separate from 🐔 chickens cleanly. Individual hens? No — and nothing fixes that. |
+| **People, full-body** | Clusters by clothing and event, not person. That half needs a face embedder. |
+
+<br/>
+
+---
+
 ## 🤔 Why we're building it
 
 > Because every "AI for robotics" tutorial assumes you have a labeling team.
@@ -94,15 +181,18 @@ The end state is a tool you walk around your space with for an afternoon and wal
 ```mermaid
 flowchart LR
     A[📸 Photo Library] -->|scan| B[✂️ SAM 2.1<br/>segment objects]
-    B --> C[🧠 MobileCLIP 2<br/>embed each crop]
-    C --> D[📊 DBSCAN<br/>cluster similar]
-    D --> E[🏷️ Inbox<br/>label once per cluster]
+    B --> C[🧠 MobileCLIP 2<br/><i>what</i> is it]
+    B --> H[🆔 DINOv2<br/><i>which one</i> is it]
+    C --> D[📊 Cluster]
+    H --> D
+    D --> E[🏷️ Inbox<br/>name it once]
     E --> F[🤖 Export<br/>COCO / YOLO / CSV]
     F --> G[🦾 Train your robot]
 
     style A fill:#FF9500,stroke:#fff,color:#fff
     style B fill:#FF2D55,stroke:#fff,color:#fff
     style C fill:#AF52DE,stroke:#fff,color:#fff
+    style H fill:#FF375F,stroke:#fff,color:#fff
     style D fill:#5856D6,stroke:#fff,color:#fff
     style E fill:#007AFF,stroke:#fff,color:#fff
     style F fill:#34C759,stroke:#fff,color:#fff
@@ -158,6 +248,7 @@ flowchart LR
 **ML layer**
 - ✂️ SAM 2.1 (CoreML)
 - 🧠 MobileCLIP 2 (Apple)
+- 🆔 DINOv2-small (identity)
 - 🎯 YOLO 26 (Ultralytics)
 - 📊 DBSCAN
 
