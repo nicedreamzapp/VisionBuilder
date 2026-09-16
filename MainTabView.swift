@@ -111,6 +111,9 @@ struct MainTabView: View {
                     recognitionEngine = ObjectRecognitionEngine()
                 }
                 refreshPendingCount()
+                // Names typed in the Name tab before 2026-09-16 were saved but never
+                // became identities; bring them in once.
+                await SeededStore.adoptPendingNames()
             }
             .onReceive(NotificationCenter.default.publisher(for: .switchToLabelTab)) { _ in
                 selectedTab = 0

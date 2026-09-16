@@ -36,6 +36,44 @@ enum SeededStore {
         return groups
     }
 
+    static func loadNames() -> [Int: String] {
+        guard let data = try? Data(contentsOf: namesFile),
+              let rows = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return [:] }
+        var out: [Int: String] = [:]
+        for r in rows { if let id = r["id"] as? Int, let n = r["name"] as? String { out[id] = n } }
+        return out
+    }
+
+    static var adoptedFile: URL { folder.appendingPathComponent("adopted.json") }
+
+    /// "Theo1", "Theo3", "Chicken1": the Name tab could not reuse a name, so extra
+    /// groups of the same animal got a number. Fold those back into one identity.
+    static func baseLabel(_ name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let base = trimmed.replacingOccurrences(of: "\\s*\\d+$", with: "", options: .regularExpression)
+        return base.isEmpty ? trimmed : base
+    }
+
+    @MainActor
+    static func adoptPendingNames() async {
+        guard isAvailable else { return }
+        let names = loadNames()
+        var adopted = Set((try? JSONDecoder().decode([Int].self, from: Data(contentsOf: adoptedFile))) ?? [])
+        let groups = Dictionary(uniqueKeysWithValues: load().map { ($0.id, $0) })
+        let engine = ObjectRecognitionEngine()
+        for (id, name) in names.sorted(by: { $0.key < $1.key }) where !name.isEmpty && !adopted.contains(id) {
+            guard let g = groups[id] else { continue }
+            let images = g.photos.compactMap { UIImage(contentsOfFile: folder.appendingPathComponent($0).path) }
+            do {
+                _ = try await engine.adoptSeededGroup(label: baseLabel(name), images: images)
+                adopted.insert(id)
+                if let data = try? JSONEncoder().encode(Array(adopted)) { try? data.write(to: adoptedFile) }
+            } catch {
+                print("⚠️ Could not add '\(name)': \(error)")
+            }
+        }
+    }
+
     static func save(names: [Int: String]) {
         let payload = names.map { ["id": $0.key, "name": $0.value] as [String: Any] }
         if let data = try? JSONSerialization.data(withJSONObject: payload, options: .prettyPrinted) {
@@ -73,7 +111,13 @@ struct SeededInboxView: View {
                 }
             }
         }
-        .onAppear { if groups.isEmpty { groups = SeededStore.load() } }
+        .onAppear {
+            guard groups.isEmpty else { return }
+            groups = SeededStore.load()
+            names = SeededStore.loadNames()
+            // Pick up where the last session stopped instead of at group 1.
+            index = groups.firstIndex { names[$0.id] == nil } ?? groups.count
+        }
     }
 
     private func card(for g: SeededGroup) -> some View {
@@ -144,8 +188,12 @@ struct SeededInboxView: View {
 
     private func advance(with value: String) {
         if let g = current {
-            names[g.id] = value.trimmingCharacters(in: .whitespaces)
+            let label = value.trimmingCharacters(in: .whitespaces)
+            names[g.id] = label
             SeededStore.save(names: names)
+            if !label.isEmpty {
+                Task { @MainActor in await SeededStore.adoptPendingNames() }
+            }
         }
         name = ""
         fieldFocused = false

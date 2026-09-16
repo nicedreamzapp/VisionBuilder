@@ -376,6 +376,69 @@ class ObjectRecognitionEngine {
         return identity
     }
     
+    // MARK: - Seeded Groups
+
+    /// Turn a Mac-computed group (Documents/seeded) into a real identity, so a
+    /// name typed in the Name tab shows up with the other animals and objects.
+    /// A name that already exists (Theo) grows that identity instead of making
+    /// a second one. Before 2026-09-16 the Name tab only wrote names.json, so
+    /// Shanti, Rupert and the birds never reached the identity list.
+    func adoptSeededGroup(label: String, images: [UIImage]) async throws -> ObjectIdentity {
+        let context = storage.context
+        let existing = try getAllIdentities().first {
+            $0.label.caseInsensitiveCompare(label) == .orderedSame
+        }
+
+        var instances: [ObjectInstance] = []
+        for image in images {
+            guard let embedding = try? await embeddingService.generateEmbedding(for: image) else { continue }
+            if let known = existing?.prototypeEmbedding, !known.isEmpty,
+               known.count != embedding.vector.count { continue }
+            let instance = ObjectInstance(
+                embedding: embedding.vector,
+                boundingBox: BoundingBox(x: 0, y: 0, width: 1, height: 1)
+            )
+            instance._setCropUIImage(image)
+            instance.isVerified = true
+            instances.append(instance)
+        }
+        guard let first = instances.first else { throw EmbeddingError.invalidImage }
+
+        let identity = existing ?? ObjectIdentity(
+            label: label,
+            prototypeEmbedding: first.embedding,
+            representativeImageData: first.cropImageData
+        )
+        if existing == nil { context.insert(identity) }
+        for instance in instances {
+            context.insert(instance)
+            identity.addInstance(instance)
+        }
+        try context.save()
+        try writeSeededImages(label: label, instances: instances)
+        print("✅ Seeded group named '\(label)': +\(instances.count), now \(identity.instanceCount)")
+        return identity
+    }
+
+    /// Same layout as createDatasetFolder, but uniquely named so adding to an
+    /// existing identity never overwrites its Object_1, Object_2, ...
+    private func writeSeededImages(label: String, instances: [ObjectInstance]) throws {
+        let folderName = label
+            .replacingOccurrences(of: " ", with: "_")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "\\", with: "_")
+        let base = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent(folderName)
+        for instance in instances {
+            guard let data = instance._cropUIImage?.jpegData(compressionQuality: 0.95) else { continue }
+            let dir = base.appendingPathComponent("Object_seeded_\(instance.id.uuidString.prefix(8))")
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try data.write(to: dir.appendingPathComponent("image.jpg"))
+            let meta = "{\"label\": \"\(label)\", \"bbox\": {\"x\": 0, \"y\": 0, \"width\": 1, \"height\": 1}, \"source\": \"seeded\"}"
+            try meta.write(to: dir.appendingPathComponent("metadata.json"), atomically: true, encoding: .utf8)
+        }
+    }
+
     // MARK: - Deletion Methods
     
     /// Delete a specific cluster and its instances
