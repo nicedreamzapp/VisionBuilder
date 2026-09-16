@@ -19,6 +19,7 @@
 		4062AF4C60DDA2579533D29D /* ConceptSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411FFD3B7077CB515964FC71 /* ConceptSearchView.swift */; };
 		4910026BAC81D93E4BE1990A /* LiveRecognitionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93B8DE102938B809016716A8 /* LiveRecognitionView.swift */; };
 		51B0BA19D09A60415EFA6AA9 /* mobileclip_s0_text.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 2F9DA7FC5EAFC0C58D406FDC /* mobileclip_s0_text.mlpackage */; };
+		560B7587711E2EBD64D81A3E /* PhotoCleanupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85577AC9EE52872094ECDBE2 /* PhotoCleanupView.swift */; };
 		60754559EF10917667CD3EF3 /* yolo26n.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = C0D100FFD5BF9028DCEF7CA2 /* yolo26n.mlpackage */; };
 		6B3369E954E0B7B159D6CBB7 /* yoloe11s_pf.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = DE19F3D31C2EB484FE5FAE41 /* yoloe11s_pf.mlpackage */; };
 		7848126E9D2D1C4641DC699C /* mobileclip2_s0_image.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 6CB14C253AFF6198FEA8C2D9 /* mobileclip2_s0_image.mlpackage */; };
@@ -112,6 +113,7 @@
 		7C0CBDBC1379701F306A1B50 /* PhotoDepthExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PhotoDepthExtractor.swift; sourceTree = SOURCE_ROOT; };
 		7C2E8B2038ACCF39A539DC98 /* clip_merges.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = clip_merges.txt; sourceTree = "<group>"; };
 		8379DB596F5702E6502CEB9F /* DINOv2Service.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DINOv2Service.swift; sourceTree = SOURCE_ROOT; };
+		85577AC9EE52872094ECDBE2 /* PhotoCleanupView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PhotoCleanupView.swift; sourceTree = SOURCE_ROOT; };
 		93B8DE102938B809016716A8 /* LiveRecognitionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveRecognitionView.swift; sourceTree = SOURCE_ROOT; };
 		97DBAD25E133E86AFE360818 /* MobileCLIPService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileCLIPService.swift; sourceTree = "<group>"; };
 		9982695F2E37BD6000572E3C /* Vision Builder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Vision Builder.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -299,6 +301,7 @@
 				8379DB596F5702E6502CEB9F /* DINOv2Service.swift */,
 				2D9AAF004220F9131450C8A5 /* dinov2_small_fp16.mlpackage */,
 				DAC4B35A41AC6B0B7BB88749 /* SeededInboxView.swift */,
+				85577AC9EE52872094ECDBE2 /* PhotoCleanupView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -527,6 +530,7 @@
 				1BC60224FCE48A132BF0ED38 /* BirdsEyeView.swift in Sources */,
 				27027832BFBC01E958D198AC /* DINOv2Service.swift in Sources */,
 				36396A654C22A4AE2BACF244 /* SeededInboxView.swift in Sources */,
+				560B7587711E2EBD64D81A3E /* PhotoCleanupView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

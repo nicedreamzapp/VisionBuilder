@@ -16,6 +16,7 @@ SWIFT_FILES = %w[
   FoundationModelsClusterNamer.swift
   PhotoDepthExtractor.swift
   LiveRecognitionView.swift
+  PhotoCleanupView.swift
 ]
 
 # .mlpackage are directories — added as folder references and bundled as resources.
