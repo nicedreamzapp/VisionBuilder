@@ -56,6 +56,7 @@ struct PhotoCleanupView: View {
     @State private var missing: [String] = []
     @State private var phase = "Finding the photos…"
     @State private var busy = true
+    @State private var finished = false
 
     var body: some View {
         NavigationStack {
@@ -64,7 +65,7 @@ struct PhotoCleanupView: View {
                     .font(.system(size: 54)).foregroundStyle(.red)
                 Text(phase)
                     .font(.headline).multilineTextAlignment(.center)
-                if !busy && !held.isEmpty {
+                if !busy && !finished && !held.isEmpty {
                     Text("\(held.count) you weren't sure about go into a Photos album called \"\(PhotoCleanupView.albumName)\" instead.")
                         .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 }
@@ -75,7 +76,13 @@ struct PhotoCleanupView: View {
                         .buttonStyle(.borderedProminent).tint(.red)
                 }
                 if busy { ProgressView() }
-                Button("Not now") { dismiss() }.buttonStyle(.bordered)
+                // Once the work is done the only thing left is to leave, so say so
+                // plainly and close on its own (Matt read "Not now" as stuck).
+                if finished {
+                    Button("Close") { dismiss() }.buttonStyle(.borderedProminent)
+                } else {
+                    Button("Not now") { dismiss() }.buttonStyle(.bordered)
+                }
             }
             .padding(24)
             .navigationTitle("Photo cleanup")
@@ -192,6 +199,8 @@ struct PhotoCleanupView: View {
                     CleanupStore.finish(deleted: matched.count, missing: missing, held: held.count)
                     phase = "Done. \(matched.count) photos moved to Recently Deleted" + (held.isEmpty ? "." : ", \(held.count) in \"\(PhotoCleanupView.albumName)\".")
                     matched = []
+                    finished = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 4) { dismiss() }
                 } else {
                     phase = "Nothing was deleted."
                 }
