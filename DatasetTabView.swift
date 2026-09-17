@@ -5,6 +5,7 @@
 
 import SwiftData
 import SwiftUI
+import ImageIO
 
 struct DatasetTabView: View {
     var recognitionEngine: ObjectRecognitionEngine?
@@ -435,9 +436,9 @@ struct DatasetTabView: View {
 
     private var folderGrid: some View {
         LazyVGrid(columns: [
-            GridItem(.flexible(), spacing: 12),
-            GridItem(.flexible(), spacing: 12)
-        ], spacing: 12) {
+            GridItem(.flexible(), spacing: 16),
+            GridItem(.flexible(), spacing: 16)
+        ], spacing: 20) {
             ForEach(filteredFolders) { folder in
                 FolderGridCard(folder: folder)
                     .onTapGesture {
@@ -620,77 +621,71 @@ struct StatCard: View {
 
 // MARK: - Folder Grid Card
 
+/// A named thing as a square of its first four photos, name and count underneath.
+/// Redone 2026-09-16: one 100pt strip with a blue number read as a file browser.
 struct FolderGridCard: View {
     let folder: LabelFolder
-    @State private var thumbnailImage: UIImage?
+    @State private var thumbs: [UIImage] = []
+
+    private var displayName: String { folder.name.replacingOccurrences(of: "_", with: " ") }
 
     var body: some View {
-        VStack(spacing: 8) {
-            // Thumbnail or placeholder
-            ZStack {
-                if let image = thumbnailImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 100)
-                        .clipped()
-                } else {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.1))
-                        .frame(height: 100)
-                        .overlay(
-                            Image(systemName: "photo.stack")
-                                .font(.title)
-                                .foregroundColor(.gray)
-                        )
-                }
-
-                // Object count badge
-                VStack {
-                    HStack {
-                        Spacer()
-                        Text("\(folder.objectCount)")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color.blue)
-                            .cornerRadius(8)
+        VStack(alignment: .leading, spacing: 6) {
+            GeometryReader { geo in
+                let side = geo.size.width
+                ZStack {
+                    Color.gray.opacity(0.12)
+                    if thumbs.isEmpty {
+                        Image(systemName: "photo").font(.largeTitle).foregroundColor(.gray)
+                    } else if thumbs.count < 4 {
+                        tile(thumbs[0], side)
+                    } else {
+                        VStack(spacing: 2) {
+                            HStack(spacing: 2) { tile(thumbs[0], side / 2 - 1); tile(thumbs[1], side / 2 - 1) }
+                            HStack(spacing: 2) { tile(thumbs[2], side / 2 - 1); tile(thumbs[3], side / 2 - 1) }
+                        }
                     }
-                    Spacer()
                 }
-                .padding(8)
+                .frame(width: side, height: side)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
             }
-            .cornerRadius(8)
+            .aspectRatio(1, contentMode: .fit)
 
-            // Label name
-            Text(folder.name.replacingOccurrences(of: "_", with: " "))
-                .font(.subheadline)
-                .fontWeight(.medium)
+            Text(displayName)
+                .font(.headline)
                 .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(folder.objectCount == 1 ? "1 photo" : "\(folder.objectCount) photos")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
-        .padding(8)
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
-        .task {
-            await loadThumbnail()
-        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(displayName), \(folder.objectCount) photos")
+        .accessibilityAddTraits(.isButton)
+        .task { await loadThumbnails() }
     }
 
-    private func loadThumbnail() async {
-        // Load first image as thumbnail
-        guard let firstImage = folder.images.first else { return }
-        let path = firstImage.filepath
+    private func tile(_ image: UIImage, _ side: CGFloat) -> some View {
+        Image(uiImage: image)
+            .resizable()
+            .scaledToFill()
+            .frame(width: side, height: side)
+            .clipped()
+    }
 
-        if FileManager.default.fileExists(atPath: path),
-           let image = UIImage(contentsOfFile: path) {
-            await MainActor.run {
-                thumbnailImage = image
+    private func loadThumbnails() async {
+        let paths = folder.images.prefix(4).map(\.filepath)
+        let images: [UIImage] = await Task.detached(priority: .utility) {
+            paths.compactMap { path in
+                let url = URL(fileURLWithPath: path) as CFURL
+                guard let src = CGImageSourceCreateWithURL(url, nil) else { return nil }
+                let opts: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true,
+                                             kCGImageSourceCreateThumbnailWithTransform: true,
+                                             kCGImageSourceThumbnailMaxPixelSize: 320]
+                return CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary).map { UIImage(cgImage: $0) }
             }
-        }
+        }.value
+        await MainActor.run { thumbs = images }
     }
 }
 

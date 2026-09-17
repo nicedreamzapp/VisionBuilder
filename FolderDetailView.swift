@@ -1,6 +1,7 @@
 // FolderDetailView.swift
 // Displays all images in a label folder as a thumbnail grid
 import SwiftUI
+import ImageIO
 
 struct FolderDetailView: View {
     let folder: LabelFolder
@@ -176,11 +177,17 @@ struct ThumbnailCell: View {
     }
 
     private func loadThumbnail() async {
-        guard FileManager.default.fileExists(atPath: image.filepath) else { return }
-
-        await MainActor.run {
-            thumbnail = UIImage(contentsOfFile: image.filepath)
-        }
+        let path = image.filepath
+        // Small, rotated-correctly thumbnail off the main thread; full-size
+        // decodes here made long folders stutter.
+        let small: UIImage? = await Task.detached(priority: .utility) {
+            guard let src = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil) else { return nil }
+            let opts: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true,
+                                         kCGImageSourceCreateThumbnailWithTransform: true,
+                                         kCGImageSourceThumbnailMaxPixelSize: 360]
+            return CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary).map { UIImage(cgImage: $0) }
+        }.value
+        await MainActor.run { thumbnail = small }
     }
 }
 
