@@ -51,6 +51,13 @@ struct PhotoExportView: View {
         defer { UIApplication.shared.isIdleTimerDisabled = false }
         let opts = PHFetchOptions()
         opts.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
+        // {"since": "<ISO date>"} sends only photos taken after that moment
+        // (a quick room test), instead of the whole library.
+        if let data = try? Data(contentsOf: ExportStore.request),
+           let req = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let since = (req["since"] as? String).flatMap({ ISO8601DateFormatter().date(from: $0) }) {
+            opts.predicate = NSPredicate(format: "creationDate > %@", since as NSDate)
+        }
         let assets = PHAsset.fetchAssets(with: .image, options: opts)
         total = assets.count
         let manager = PHImageManager.default()
@@ -61,6 +68,10 @@ struct PhotoExportView: View {
         req.isNetworkAccessAllowed = false
         let iso = ISO8601DateFormatter()
         let folder = ExportStore.folder
+        for old in (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
+            where old.lastPathComponent.hasPrefix("pack_") || old.lastPathComponent == "done.txt" {
+            try? FileManager.default.removeItem(at: old)
+        }
         let list = (0..<assets.count).map { assets.object(at: $0) }
 
         await Task.detached(priority: .userInitiated) {

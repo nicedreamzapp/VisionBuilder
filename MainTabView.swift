@@ -12,6 +12,7 @@ struct MainTabView: View {
     // Land on the naming flow when seeded groups are waiting, else Dataset.
     @State private var showCleanup = false
     @State private var showExport = false
+    @State private var showCapture = false
     @State private var selectedTab = SeededStore.unnamedCount > 0 ? 5 : 1
     @State private var recognitionEngine: ObjectRecognitionEngine?
     @State private var pendingClusterCount = 0
@@ -96,9 +97,12 @@ struct MainTabView: View {
         .sheet(isPresented: $showCleanup) { PhotoCleanupView() }
         // The Mac asked for small copies of the camera roll (no cable needed).
         .fullScreenCover(isPresented: $showExport) { PhotoExportView() }
+        // The Mac asked the phone to take a few room photos.
+        .fullScreenCover(isPresented: $showCapture) { RemoteCaptureView() }
         .onAppear {
             showCleanup = CleanupStore.isAvailable
             showExport = !showCleanup && ExportStore.isRequested
+            showCapture = !showCleanup && !showExport && CaptureStore.isRequested
         }
     }
 

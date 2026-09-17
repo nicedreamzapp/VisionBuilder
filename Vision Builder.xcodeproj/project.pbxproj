@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00173807359015CF2D339D91 /* CLIPTokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE07F701F1AC0699583CB401 /* CLIPTokenizer.swift */; };
+		04B01D6054B32B1C4EA3527F /* RemoteCaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95F6BE6B5BDDC4E680F69C9 /* RemoteCaptureView.swift */; };
 		1BC60224FCE48A132BF0ED38 /* BirdsEyeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D92985B80B592CAB9C1D5ED /* BirdsEyeView.swift */; };
 		1C7341F78F23C6DEC5307AF8 /* SAM3ConceptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B92008C2CDCC6AAE8C526CE8 /* SAM3ConceptService.swift */; };
 		22C638EF089770F08DA09D8C /* EmbeddingMigrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A06C6DF89F0F5B093E8F8FC /* EmbeddingMigrationService.swift */; };
@@ -163,6 +164,7 @@
 		99FB3DCA2E96615A0036162D /* Confirmationview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confirmationview.swift; sourceTree = "<group>"; };
 		99FB3DCC2E96618A0036162D /* Activelearningcontroller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Activelearningcontroller.swift; sourceTree = "<group>"; };
 		99FB3DCE2E9661F90036162D /* Appsettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Appsettings.swift; sourceTree = "<group>"; };
+		A95F6BE6B5BDDC4E680F69C9 /* RemoteCaptureView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RemoteCaptureView.swift; sourceTree = SOURCE_ROOT; };
 		B124D68CB2958FC59F9E5939 /* UpgradePromptView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UpgradePromptView.swift; sourceTree = "<group>"; };
 		B92008C2CDCC6AAE8C526CE8 /* SAM3ConceptService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SAM3ConceptService.swift; sourceTree = SOURCE_ROOT; };
 		C0D100FFD5BF9028DCEF7CA2 /* yolo26n.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = yolo26n.mlpackage; sourceTree = SOURCE_ROOT; };
@@ -305,6 +307,7 @@
 				DAC4B35A41AC6B0B7BB88749 /* SeededInboxView.swift */,
 				85577AC9EE52872094ECDBE2 /* PhotoCleanupView.swift */,
 				65155A6487270B887BBF2132 /* PhotoExportView.swift */,
+				A95F6BE6B5BDDC4E680F69C9 /* RemoteCaptureView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -535,6 +538,7 @@
 				36396A654C22A4AE2BACF244 /* SeededInboxView.swift in Sources */,
 				560B7587711E2EBD64D81A3E /* PhotoCleanupView.swift in Sources */,
 				7BE633960F949607B281DB07 /* PhotoExportView.swift in Sources */,
+				04B01D6054B32B1C4EA3527F /* RemoteCaptureView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
