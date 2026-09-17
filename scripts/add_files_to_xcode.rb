@@ -17,6 +17,7 @@ SWIFT_FILES = %w[
   PhotoDepthExtractor.swift
   LiveRecognitionView.swift
   PhotoCleanupView.swift
+  PhotoExportView.swift
 ]
 
 # .mlpackage are directories — added as folder references and bundled as resources.

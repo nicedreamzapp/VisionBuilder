@@ -11,6 +11,7 @@ struct MainTabView: View {
     @StateObject private var datasetManager = DatasetManager()
     // Land on the naming flow when seeded groups are waiting, else Dataset.
     @State private var showCleanup = false
+    @State private var showExport = false
     @State private var selectedTab = SeededStore.unnamedCount > 0 ? 5 : 1
     @State private var recognitionEngine: ObjectRecognitionEngine?
     @State private var pendingClusterCount = 0
@@ -93,7 +94,12 @@ struct MainTabView: View {
         .withToasts()
         // A delete list picked on the Mac opens straight into the cleanup sheet.
         .sheet(isPresented: $showCleanup) { PhotoCleanupView() }
-        .onAppear { showCleanup = CleanupStore.isAvailable }
+        // The Mac asked for small copies of the camera roll (no cable needed).
+        .fullScreenCover(isPresented: $showExport) { PhotoExportView() }
+        .onAppear {
+            showCleanup = CleanupStore.isAvailable
+            showExport = !showCleanup && ExportStore.isRequested
+        }
     }
 
     // Inconspicuous build stamp so an installed build is identifiable at a glance

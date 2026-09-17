@@ -24,6 +24,7 @@
 		6B3369E954E0B7B159D6CBB7 /* yoloe11s_pf.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = DE19F3D31C2EB484FE5FAE41 /* yoloe11s_pf.mlpackage */; };
 		7848126E9D2D1C4641DC699C /* mobileclip2_s0_image.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 6CB14C253AFF6198FEA8C2D9 /* mobileclip2_s0_image.mlpackage */; };
 		799EE588B394F5906A89ECE4 /* FoundationModelsClusterNamer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60BD6F3302DB5D10BD7B1FA8 /* FoundationModelsClusterNamer.swift */; };
+		7BE633960F949607B281DB07 /* PhotoExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65155A6487270B887BBF2132 /* PhotoExportView.swift */; };
 		955DF5883C0FD4D3B3B9D034 /* AutoLabelService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E417A67E74224E364E5B8608 /* AutoLabelService.swift */; };
 		998269A12E37C28300572E3C /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 998269A02E37C28300572E3C /* CoreImage.framework */; };
 		998269AB2E37C2C900572E3C /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 998269A92E37C2C900572E3C /* Vision.framework */; };
@@ -109,6 +110,7 @@
 		5096AA41CADA5DA3D8855722 /* mobileclip2_s0_text.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = mobileclip2_s0_text.mlpackage; sourceTree = SOURCE_ROOT; };
 		5D92985B80B592CAB9C1D5ED /* BirdsEyeView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BirdsEyeView.swift; sourceTree = SOURCE_ROOT; };
 		60BD6F3302DB5D10BD7B1FA8 /* FoundationModelsClusterNamer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FoundationModelsClusterNamer.swift; sourceTree = SOURCE_ROOT; };
+		65155A6487270B887BBF2132 /* PhotoExportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PhotoExportView.swift; sourceTree = SOURCE_ROOT; };
 		6CB14C253AFF6198FEA8C2D9 /* mobileclip2_s0_image.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.mlpackage; path = mobileclip2_s0_image.mlpackage; sourceTree = SOURCE_ROOT; };
 		7C0CBDBC1379701F306A1B50 /* PhotoDepthExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PhotoDepthExtractor.swift; sourceTree = SOURCE_ROOT; };
 		7C2E8B2038ACCF39A539DC98 /* clip_merges.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = clip_merges.txt; sourceTree = "<group>"; };
@@ -302,6 +304,7 @@
 				2D9AAF004220F9131450C8A5 /* dinov2_small_fp16.mlpackage */,
 				DAC4B35A41AC6B0B7BB88749 /* SeededInboxView.swift */,
 				85577AC9EE52872094ECDBE2 /* PhotoCleanupView.swift */,
+				65155A6487270B887BBF2132 /* PhotoExportView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -531,6 +534,7 @@
 				27027832BFBC01E958D198AC /* DINOv2Service.swift in Sources */,
 				36396A654C22A4AE2BACF244 /* SeededInboxView.swift in Sources */,
 				560B7587711E2EBD64D81A3E /* PhotoCleanupView.swift in Sources */,
+				7BE633960F949607B281DB07 /* PhotoExportView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
