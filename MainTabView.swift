@@ -11,77 +11,41 @@ struct MainTabView: View {
     @StateObject private var datasetManager = DatasetManager()
     // Land on the naming flow when seeded groups are waiting, else Dataset.
     @State private var showCleanup = false
-    @State private var selectedTab = SeededStore.isAvailable ? 5 : 1
+    @State private var selectedTab = SeededStore.unnamedCount > 0 ? 5 : 1
     @State private var recognitionEngine: ObjectRecognitionEngine?
     @State private var pendingClusterCount = 0
 
     // Dynamic accent color based on selected tab
     private var tabAccentColor: Color {
         switch selectedTab {
-        case 0: return .appBlue      // Label tab
-        case 1: return .appGreen     // Dataset tab
-        case 2: return .appOrange    // Inbox tab
-        case 3: return .appPurple    // Insights tab
-        case 4: return .appTeal      // Live tab
-        case 5: return .appBlue      // Name tab
+        case 1: return .appGreen     // My Things
+        case 4: return .appTeal      // Live
+        case 5: return .appBlue      // Name
         default: return .appBlue
         }
     }
 
     var body: some View {
         ZStack {
+            // Three tabs, simplified 2026-09-16: what you have, what needs a name,
+            // and the camera. Adding photos and Insights moved into My Things.
             TabView(selection: $selectedTab) {
-            // Label Tab
-            LabelNavigationView(selectedTab: $selectedTab)
-                .tabItem {
-                    Label("Label", systemImage: "camera.fill")
-                }
-                .tag(0)
-                .environmentObject(datasetManager)
-
-            // Dataset Tab
             DatasetTabView(recognitionEngine: recognitionEngine)
                 .tabItem {
-                    Label("Dataset", systemImage: "folder.fill")
+                    Label("My Things", systemImage: "square.grid.2x2.fill")
                 }
                 .tag(1)
                 .environmentObject(exportManager)
                 .environmentObject(datasetManager)
 
-            // Morning Inbox Tab — badge shows how many groups wait for a name
-            if let engine = recognitionEngine {
-                MorningInboxView(recognitionEngine: engine)
-                    .tabItem {
-                        Label("Inbox", systemImage: "tray.fill")
-                    }
-                    .tag(2)
-                    .badge(pendingClusterCount)
-                    .modelContainer(ObjectRecognitionStorage.shared.container)
-            } else {
-                ProgressView()
-                    .tabItem {
-                        Label("Inbox", systemImage: "tray.fill")
-                    }
-                    .tag(2)
-            }
-
-            // Name Tab — pre-computed groups from a Mac run, only when seeded
-            if SeededStore.isAvailable {
-                SeededInboxView()
-                    .tabItem {
-                        Label("Name", systemImage: "tag.fill")
-                    }
-                    .tag(5)
-            }
-
-            // Insights Tab
-            InsightsView()
+            NameTabView(recognitionEngine: recognitionEngine)
                 .tabItem {
-                    Label("Insights", systemImage: "chart.bar.fill")
+                    Label("Name", systemImage: "tag.fill")
                 }
-                .tag(3)
+                .tag(5)
+                .badge(pendingClusterCount + SeededStore.unnamedCount)
+                .modelContainer(ObjectRecognitionStorage.shared.container)
 
-            // Live recognition — names YOUR labeled objects through the camera
             LiveRecognitionView()
                 .tabItem {
                     Label("Live", systemImage: "eye.fill")
@@ -117,7 +81,7 @@ struct MainTabView: View {
                 await SeededStore.adoptPendingNames()
             }
             .onReceive(NotificationCenter.default.publisher(for: .switchToLabelTab)) { _ in
-                selectedTab = 0
+                selectedTab = 1 // My Things opens the add-photos sheet itself
             }
             .onReceive(NotificationCenter.default.publisher(for: .switchToDatasetTab)) { _ in
                 selectedTab = 1
@@ -153,3 +117,19 @@ struct MainTabView: View {
     }
 }
 
+/// One place for everything waiting on a name: groups computed on the Mac first,
+/// then whatever the phone's own photo scan found.
+struct NameTabView: View {
+    let recognitionEngine: ObjectRecognitionEngine?
+    @State private var showSeeded = SeededStore.unnamedCount > 0
+
+    var body: some View {
+        if showSeeded {
+            SeededInboxView(onFinished: { showSeeded = false })
+        } else if let engine = recognitionEngine {
+            MorningInboxView(recognitionEngine: engine)
+        } else {
+            ProgressView()
+        }
+    }
+}

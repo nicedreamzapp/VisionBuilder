@@ -95,9 +95,10 @@ class DatasetManager: ObservableObject {
                 var isDirectory: ObjCBool = false
                 FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
 
+                // seeded/ and cleanup/ are working folders, not things Matt named.
                 guard isDirectory.boolValue,
                       !url.lastPathComponent.hasPrefix("."),
-                      url.lastPathComponent != "Dataset"
+                      !["Dataset", "seeded", "cleanup"].contains(url.lastPathComponent)
                 else {
                     continue
                 }
@@ -170,8 +171,10 @@ class DatasetManager: ObservableObject {
             ).filter { $0.lastPathComponent.hasPrefix("Object_") && $0.hasDirectoryPath }
 
             return objectFolders.compactMap { objectFolder -> DatasetImage? in
-                let imagePath = objectFolder.appendingPathComponent("image_640.jpg")
-                guard FileManager.default.fileExists(atPath: imagePath.path) else {
+                // Labeling writes image_640.jpg; naming a group and the older
+                // dataset writer write image.jpg. Only looking for the first
+                // left every named animal showing "No Images" (2026-09-16).
+                guard let imagePath = Self.objectImage(in: objectFolder) else {
                     return nil
                 }
 
@@ -179,7 +182,7 @@ class DatasetManager: ObservableObject {
                 let fileSize = fileAttributes?[.size] as? Int64 ?? 0
 
                 return DatasetImage(
-                    filename: "image_640.jpg",
+                    filename: imagePath.lastPathComponent,
                     filepath: imagePath.path,
                     labelFolderName: folderURL.lastPathComponent,
                     objectFolderName: objectFolder.lastPathComponent,
@@ -190,6 +193,16 @@ class DatasetManager: ObservableObject {
             print("Error loading images: \(error)")
             return []
         }
+    }
+
+    static func objectImage(in objectFolder: URL) -> URL? {
+        let fm = FileManager.default
+        for name in ["image_640.jpg", "image.jpg", "image_full.jpg", "image_1280.jpg"] {
+            let u = objectFolder.appendingPathComponent(name)
+            if fm.fileExists(atPath: u.path) { return u }
+        }
+        return (try? fm.contentsOfDirectory(at: objectFolder, includingPropertiesForKeys: nil))?
+            .first { ["jpg", "jpeg", "png"].contains($0.pathExtension.lowercased()) }
     }
 
     func deleteFolder(_ folder: LabelFolder) {

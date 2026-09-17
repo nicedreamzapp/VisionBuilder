@@ -69,7 +69,7 @@ struct MorningInboxView: View {
                     }
                 }
             }
-            .navigationTitle("Inbox")
+            .navigationTitle("Name")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { inboxTrailingMenu }
             .sheet(isPresented: $showingConfirmation) {
@@ -512,7 +512,7 @@ struct MorningInboxView: View {
             }
 
             VStack(spacing: 8) {
-                Text(didLabelAnything ? "All Done!" : (skipped > 0 ? "Review Complete" : "Inbox is Empty"))
+                Text(didLabelAnything ? "All Done!" : (skipped > 0 ? "Review Complete" : "Nothing to Name"))
                     .font(.largeTitle.bold())
 
                 Text(didLabelAnything
@@ -521,7 +521,7 @@ struct MorningInboxView: View {
                         : "Labeled \(labeled) cluster\(labeled == 1 ? "" : "s")")
                      : (skipped > 0
                         ? "Skipped all \(skipped) clusters — nothing was labeled."
-                        : "Scan your photo library from the Dataset tab to discover objects to label."))
+                        : "Scan your photos from My Things and anything new shows up here to name."))
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -531,7 +531,7 @@ struct MorningInboxView: View {
             Button {
                 NotificationCenter.default.post(name: .switchToDatasetTab, object: nil)
             } label: {
-                Label(didLabelAnything ? "Back to Dataset" : "Go Scan Photos", systemImage: "folder.fill")
+                Label(didLabelAnything ? "Back to My Things" : "Go Scan Photos", systemImage: "folder.fill")
                     .frame(maxWidth: 200)
             }
             .buttonStyle(.borderedProminent)

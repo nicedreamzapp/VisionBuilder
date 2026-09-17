@@ -24,6 +24,8 @@ struct DatasetTabView: View {
     @State private var indexingProgress: Double = 0
     @State private var indexingOperation = ""
     @State private var showingConceptSearch = false
+    @State private var showingAdd = false
+    @State private var showingInsights = false
 
     // Live scan feed
     @State private var currentPhoto: UIImage?
@@ -54,11 +56,22 @@ struct DatasetTabView: View {
                     datasetContentView
                 }
             }
-            .navigationTitle("Dataset")
+            .navigationTitle("My Things")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { showingAdd = true } label: {
+                        Label("Add photos", systemImage: "plus.circle.fill")
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
+                        Button {
+                            showingInsights = true
+                        } label: {
+                            Label("Insights", systemImage: "chart.bar")
+                        }
+
                         Button {
                             Task { await refreshDataset() }
                         } label: {
@@ -98,7 +111,7 @@ struct DatasetTabView: View {
                     }
                 }
             }
-            .searchable(text: $searchText, prompt: "Search labels")
+            .searchable(text: $searchText, prompt: "Search")
             .refreshable {
                 await refreshDataset()
             }
@@ -123,6 +136,21 @@ struct DatasetTabView: View {
             .navigationDestination(item: $selectedFolder) { folder in
                 FolderDetailView(folder: folder)
                     .environmentObject(datasetManager)
+            }
+            .sheet(isPresented: $showingAdd) {
+                LabelNavigationView(selectedTab: .constant(1))
+                    .environmentObject(datasetManager)
+                    .onDisappear { Task { await datasetManager.loadDataset() } }
+            }
+            .sheet(isPresented: $showingInsights) {
+                InsightsView()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .switchToLabelTab)) { _ in
+                showingAdd = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .switchToDatasetTab)) { _ in
+                showingAdd = false
+                Task { await datasetManager.loadDataset() }
             }
             .sheet(isPresented: $showingConceptSearch) {
                 ConceptSearchView(recognitionEngine: recognitionEngine)
@@ -292,10 +320,10 @@ struct DatasetTabView: View {
                     )
 
                 VStack(spacing: 8) {
-                    Text("No Labels Yet")
+                    Text("Nothing Here Yet")
                         .font(.title2.bold())
 
-                    Text("Scan your photo library to discover objects, then label them to build your dataset.")
+                    Text("Scan your photos and the app finds your pets, people and things. Then you give each one a name.")
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -318,7 +346,7 @@ struct DatasetTabView: View {
                     Button {
                         NotificationCenter.default.post(name: .switchToLabelTab, object: nil)
                     } label: {
-                        Label("Manual Labeling", systemImage: "hand.tap")
+                        Label("Add Photos Myself", systemImage: "plus")
                             .frame(maxWidth: 220)
                     }
                     .buttonStyle(.bordered)
@@ -333,26 +361,14 @@ struct DatasetTabView: View {
     private var datasetContentView: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                // Colorful Header
-                GradientHeaderCard(
-                    title: "Your Dataset",
-                    subtitle: "\(datasetManager.labelFolders.count) labels, \(datasetManager.totalObjectCount) objects",
-                    icon: "folder.fill",
-                    gradient: TabTheme.dataset.headerGradient
-                )
-
-                // Prominent Scan Button
-                if !isIndexing {
-                    scanPhotoLibraryButton
-                }
+                Text("\(datasetManager.labelFolders.count) things, \(datasetManager.totalObjectCount) photos")
+                    .font(.subheadline).foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 // Indexing Progress (if active)
                 if isIndexing {
                     indexingProgressCard
                 }
-
-                // Stats Header
-                statsHeader
 
                 // Folder Grid
                 folderGrid
@@ -649,7 +665,7 @@ struct FolderGridCard: View {
             .cornerRadius(8)
 
             // Label name
-            Text(folder.name)
+            Text(folder.name.replacingOccurrences(of: "_", with: " "))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .lineLimit(1)

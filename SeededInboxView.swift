@@ -44,6 +44,12 @@ enum SeededStore {
         return out
     }
 
+    static var unnamedCount: Int {
+        guard isAvailable else { return 0 }
+        let names = loadNames()
+        return load().filter { names[$0.id] == nil }.count
+    }
+
     static var adoptedFile: URL { folder.appendingPathComponent("adopted.json") }
 
     /// "Theo1", "Theo3", "Chicken1": the Name tab could not reuse a name, so extra
@@ -83,6 +89,7 @@ enum SeededStore {
 }
 
 struct SeededInboxView: View {
+    var onFinished: (() -> Void)? = nil
     @State private var groups: [SeededGroup] = []
     @State private var index = 0
     @State private var name = ""
@@ -182,6 +189,10 @@ struct SeededInboxView: View {
                 .font(.subheadline).foregroundStyle(.secondary)
             Button("Start over") { index = 0; name = "" }
                 .buttonStyle(.bordered).padding(.top, 4)
+            if let onFinished {
+                Button("See what the phone found") { onFinished() }
+                    .buttonStyle(.borderedProminent).padding(.top, 2)
+            }
         }
         .padding()
     }

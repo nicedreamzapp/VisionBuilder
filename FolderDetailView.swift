@@ -24,7 +24,7 @@ struct FolderDetailView: View {
                 contentView
             }
         }
-        .navigationTitle(folder.name)
+        .navigationTitle(folder.name.replacingOccurrences(of: "_", with: " "))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
