@@ -11,7 +11,7 @@
 <br/>
 
 [![Platform](https://img.shields.io/badge/iOS-26%2B-007AFF?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/ios/)
-[![Swift](https://img.shields.io/badge/Swift-5.9-FA7343?style=for-the-badge&logo=swift&logoColor=white)](https://swift.org)
+[![Swift](https://img.shields.io/badge/Swift-5%20mode-FA7343?style=for-the-badge&logo=swift&logoColor=white)](https://swift.org)
 [![CoreML](https://img.shields.io/badge/CoreML-on--device-5856D6?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/machine-learning/core-ml/)
 [![License](https://img.shields.io/badge/license-MIT-34C759?style=for-the-badge)](LICENSE)
 
@@ -22,6 +22,12 @@
 [![DINOv2](https://img.shields.io/badge/DINOv2-identity-FF375F?style=for-the-badge)](https://github.com/facebookresearch/dinov2)
 
 </div>
+
+<br/>
+
+**What it does:** Vision Builder scans your iPhone photo library, cuts every object out with SAM 2.1, groups look-alikes, lets you name each group once, and exports a labeled object-detection dataset (COCO, YOLO or CSV), all on the phone.
+
+**Proof:** [real results on a 4,959-photo camera roll](#-does-it-actually-work-yes--here-are-the-numbers), the Swift source for every stage in this repo, and the [model conversion scripts](scripts/). There are no screenshots, demo video or App Store build yet.
 
 <br/>
 
@@ -45,6 +51,7 @@
 **🚀 Start here**
 - [✨ The vision](#-the-vision-what-finished-actually-looks-like)
 - [🐕 Does it work?](#-does-it-actually-work-yes--here-are-the-numbers)
+- [👤 What I built](#-what-i-built)
 - [🤔 Why build it](#-why-were-building-it)
 
 </td>
@@ -97,7 +104,7 @@ When this thing is "done" (it never will be — software is forever), here's wha
 | Step | What happens |
 | --- | --- |
 | 📸 **Capture** | Take photos, or aim at your existing library — your phone already has thousands of pictures of your life |
-| ✂️ **Auto-segment** | SAM 2 (or 3, when Apple ships it) cuts every object out of every photo, automatically |
+| ✂️ **Auto-segment** | SAM 2 (or SAM 3, once a CoreML export exists) cuts every object out of every photo, automatically |
 | 🧠 **Auto-cluster** | MobileCLIP 2 fingerprints each cut-out and groups them by visual similarity — *"hey, here are 14 photos of what looks like the same coffee mug"* |
 | 🏷️ **Label once** | You tap one cluster, type "coffee mug," and **all 14 instances inherit that label**. Big-batch instead of one-photo-at-a-time grinding |
 | 🤖 **Export** | Spit out a clean labeled dataset in **COCO JSON, YOLO TXT, or CSV**. Drop it straight into your model training pipeline |
@@ -148,6 +155,9 @@ Not a benchmark. **4,959 photos off one real iPhone camera roll**, three dogs th
 > CLIP is trained to tell a chair from a lamp — not **your** chair from **mine**.
 > Identity needs an identity embedder. 🎯
 
+> [!NOTE]
+> These groups were computed on a Mac with the same DINOv2-small model the app uses, then loaded into the app's **Name** tab ([`SeededInboxView.swift`](SeededInboxView.swift)). The on-phone service ([`DINOv2Service.swift`](DINOv2Service.swift)) exists but is not yet wired into the phone's own scan, which still clusters MobileCLIP embeddings with DBSCAN. The Mac-side grouping script is not in this repo.
+
 ### 🧱 And here's what it genuinely **cannot** do
 
 | ❌ Limit | 🔍 What we measured |
@@ -155,6 +165,25 @@ Not a benchmark. **4,959 photos off one real iPhone camera roll**, three dogs th
 | **Identical mass-produced things** | 28 *different* shipping labels over 886 days → one tight cluster. For inventory, identity isn't in the pixels at all. |
 | **Same-breed poultry** | 🦆 Ducks separate from 🐔 chickens cleanly. Individual hens? No — and nothing fixes that. |
 | **People, full-body** | Clusters by clothing and event, not person. That half needs a face embedder. |
+
+<br/>
+
+---
+
+## 👤 What I built
+
+Designed and written by **Matt Macosko**. The models are upstream (Meta SAM 2.1 and DINOv2, Apple MobileCLIP 2, Ultralytics YOLO 26 / YOLOE); the app and glue around them is mine:
+
+- **Library scan + clustering:** [`PhotoLibraryIndexer.swift`](PhotoLibraryIndexer.swift), [`ObjectRecognitionEngine.swift`](ObjectRecognitionEngine.swift) (DBSCAN on MobileCLIP embeddings, pending clusters, label-once)
+- **SAM 2.1 on CoreML:** [`SAM2CoreMLProcessor.swift`](SAM2CoreMLProcessor.swift), [`SAM2DetectionManager.swift`](SAM2DetectionManager.swift)
+- **MobileCLIP 2 embeddings + tokenizer:** [`MobileCLIPService.swift`](MobileCLIPService.swift), [`CLIPTokenizer.swift`](CLIPTokenizer.swift), [`scripts/convert_mobileclip2.py`](scripts/convert_mobileclip2.py)
+- **DINOv2 identity + the dog test above:** [`DINOv2Service.swift`](DINOv2Service.swift), [`scripts/convert_dinov2.py`](scripts/convert_dinov2.py)
+- **YOLOE 4,585-class detector with YOLO 26 / v8 fallback:** [`YOLOObjectDetector.swift`](YOLOObjectDetector.swift), [`scripts/convert_yoloe.py`](scripts/convert_yoloe.py), [`scripts/convert_yolo26.py`](scripts/convert_yolo26.py)
+- **Naming flow:** [`MainTabView.swift`](MainTabView.swift) (Name tab), [`SeededInboxView.swift`](SeededInboxView.swift), [`MorningInboxView.swift`](MorningInboxView.swift)
+- **Live camera recognition:** [`LiveRecognitionView.swift`](LiveRecognitionView.swift)
+- **Bird's-eye mosaic + concept search:** [`BirdsEyeView.swift`](BirdsEyeView.swift), [`ConceptSearchService.swift`](ConceptSearchService.swift)
+- **COCO / YOLO / CSV export:** [`ExportManager.swift`](ExportManager.swift), [`ExportOptionsView.swift`](ExportOptionsView.swift)
+- **Model conversion pipeline** (Python 3.12 venv, coremltools patch, fp16 NaN checks): [`scripts/convert_models.sh`](scripts/convert_models.sh)
 
 <br/>
 
@@ -182,10 +211,10 @@ Not a benchmark. **4,959 photos off one real iPhone camera roll**, three dogs th
 flowchart LR
     A[📸 Photo Library] -->|scan| B[✂️ SAM 2.1<br/>segment objects]
     B --> C[🧠 MobileCLIP 2<br/><i>what</i> is it]
-    B --> H[🆔 DINOv2<br/><i>which one</i> is it]
-    C --> D[📊 Cluster]
-    H --> D
-    D --> E[🏷️ Inbox<br/>name it once]
+    B -.->|Mac-side today| H[🆔 DINOv2<br/><i>which one</i> is it]
+    C --> D[📊 DBSCAN cluster]
+    H -.-> E
+    D --> E[🏷️ Name tab<br/>name it once]
     E --> F[🤖 Export<br/>COCO / YOLO / CSV]
     F --> G[🦾 Train your robot]
 
@@ -214,15 +243,16 @@ flowchart LR
 | MobileCLIP 2 embeddings | ✅ | fp32 (the fp16 tower NaNs — see convert script), center-crop preprocessing |
 | YOLOE detection | ✅ | **4,585 classes**, prompt-free open-vocab, decode baked into the CoreML graph (YOLO 26 / v8 fallback) |
 | Live recognition tab | ✅ | Point the camera — objects *you've labeled* get named on screen, on-device |
-| Bird's-eye dataset mosaic | ✅ | Whole dataset on one zoomable wall (Dataset → ⋯) |
+| Bird's-eye dataset mosaic | ✅ | Whole dataset on one zoomable wall (My Things → ⋯) |
 | DBSCAN clustering | ✅ | Euclidean on unit vectors, eps measured against real embeddings (not vibes) |
+| DINOv2 identity grouping | 🟡 | Measured on a Mac (numbers above); on-phone service written but not wired into the scan yet |
 | Photo library scan | ✅ | Working but slow on big libraries |
-| Inbox cluster review | 🟡 | Functional, UX still rough |
+| Name tab cluster review | 🟡 | Functional, UX still rough |
 | Manual labeling flow | 🟡 | Has back/next now, editor is busy |
 | Concept search | 🟡 | "Find all my cups" — works, sometimes underwhelming |
-| COCO / CSV export | ✅ | Ready for any standard pipeline, real zips, share sheet |
+| COCO / YOLO / CSV export | ✅ | Ready for any standard pipeline, real zips, share sheet |
 | Foundation Models smart-naming | 💤 | Scaffolded — needs A17 Pro+ device |
-| SAM 3 text-prompted segmentation | 💤 | Skeleton ready — waiting on Meta CoreML |
+| SAM 3 text-prompted segmentation | 💤 | Skeleton ready, waiting on an upstream EfficientSAM3 CoreML export |
 | iCloud sync | ❌ | On the list |
 | Apple Watch quick-label | ❌ | On the list |
 | Siri Shortcuts | ❌ | On the list |
@@ -249,14 +279,14 @@ flowchart LR
 - ✂️ SAM 2.1 (CoreML)
 - 🧠 MobileCLIP 2 (Apple)
 - 🆔 DINOv2-small (identity)
-- 🎯 YOLO 26 (Ultralytics)
+- 🎯 YOLOE + YOLO 26 (Ultralytics)
 - 📊 DBSCAN
 
 </td>
 <td>
 
 **Apple Intelligence**
-- 🤖 Foundation Models
+- 🤖 Foundation Models (dormant)
 - ⚡ Neural Engine
 - 🔒 100% on-device
 
@@ -274,7 +304,8 @@ flowchart LR
 > - **iOS 26.0+** (Foundation Models APIs + iOS 26 SwiftUI bits)
 > - **iPhone with A14 chip or later** for Neural Engine acceleration
 > - **Apple Intelligence device (iPhone 15 Pro+)** *only* for the on-device LLM cluster-naming — everything else runs on older iPhones
-> - **Xcode 15+** to build
+> - **Xcode 26+** to build (the project targets the iOS 26 SDK)
+> - **A Mac with Apple Silicon + Python 3.10 to 3.12** only if you want to regenerate the bigger models
 
 <br/>
 
@@ -286,9 +317,13 @@ flowchart LR
 git clone https://github.com/nicedreamzapp/VisionBuilder.git
 cd VisionBuilder
 
-# Generate the upgraded mlpackages (MobileCLIP 2 + YOLO 26)
+# Optional: generate the upgraded mlpackages (MobileCLIP 2 + YOLO 26)
 # Takes ~5 min on Apple Silicon
 bash scripts/convert_models.sh all
+
+# Optional extras, not included in "all":
+bash scripts/convert_models.sh yoloe     # 4,585-class YOLOE detector
+python3 scripts/convert_dinov2.py        # DINOv2 identity model (run inside .venv-models)
 
 # Open in Xcode and build to a real device
 # (Simulator works but it's slow — no Neural Engine)
@@ -301,7 +336,9 @@ open "Vision Builder.xcodeproj"
 > - `mobileclip2_s0_text.mlpackage` (121 MB)
 > - `yolo26n.mlpackage` (4.8 MB)
 >
-> These are gitignored — too big for GitHub's 100MB file limit, but reproducibly regenerated by the script.
+> These are gitignored — too big for GitHub's 100MB file limit, but reproducibly regenerated by the script. Drag them into Xcode and add them to the Vision Builder target.
+>
+> If you skip conversion, the app still builds and runs on the models already committed here: SAM 2.1, MobileCLIP S0 (v1) and YOLOv8n Open Images. It picks YOLOE, then YOLO 26, then YOLOv8 based on what is bundled.
 
 <br/>
 
@@ -311,13 +348,16 @@ open "Vision Builder.xcodeproj"
 
 ```
 1. Grant photo library access
-2. Dataset tab → "Scan Photo Library"
-3. Wait — you'll see objects fly by in the live feed
-4. Inbox tab → label each cluster (one tap per cluster of N similar objects)
-5. Dataset tab → menu → "Export All" → COCO/YOLO/CSV
+2. My Things tab → ⋯ → "Scan Photo Library"
+3. Wait — you'll see the object count climb as it scans
+4. Name tab → label each cluster (one tap per cluster of N similar objects)
+5. My Things tab → ⋯ → "Export All" → COCO/YOLO/CSV
 6. Feed the dataset into your training pipeline
 7. Train. Deploy. Profit. (lol, jk, you'll iterate forever)
 ```
+
+> [!NOTE]
+> The app also has developer test hooks for a Mac ([`PhotoExportView.swift`](PhotoExportView.swift), [`RemoteCaptureView.swift`](RemoteCaptureView.swift), [`PhotoCleanupView.swift`](PhotoCleanupView.swift)). They only run when a Mac has dropped a request file into the app's Documents folder (copied with `devicectl`). Normal use never sends anything off the phone.
 
 <br/>
 
@@ -329,7 +369,8 @@ open "Vision Builder.xcodeproj"
 > Rough priority order. Subject to change every time we open the app and trip over a bug.
 
 - [ ] Make the **Inbox flow buttery** — it's the heart of the app
-- [ ] Better **SAM 3** integration when Meta ships CoreML
+- [ ] **SAM 3** integration once an EfficientSAM3 CoreML export ships upstream
+- [ ] **Wire DINOv2 into the phone's own scan** so identity grouping no longer needs the Mac
 - [ ] **iCloud sync** so you can label across iPhone + iPad
 - [ ] **Apple Watch** companion for "label this object" in the wild
 - [ ] **Siri Shortcuts** ("scan my latest 100 photos")
@@ -363,9 +404,9 @@ We're a small team learning as we go. If you're a **robotics person** with opini
 
 | Who | What for |
 | --- | --- |
-| 🦾 [Meta AI](https://ai.meta.com/) | SAM 2 (and SAM 3) — segmenting anything is wild |
-| 🍎 [Apple ML Research](https://machinelearning.apple.com/) | MobileCLIP 2 + FastVLM — vision-language tiny enough for a phone |
-| 🚀 [Ultralytics](https://ultralytics.com/) | YOLO 26 + actually shipping CoreML exports |
+| 🦾 [Meta AI](https://ai.meta.com/) | SAM 2.1 and DINOv2 — segmenting anything is wild |
+| 🍎 [Apple ML Research](https://machinelearning.apple.com/) | MobileCLIP 2 — vision-language tiny enough for a phone |
+| 🚀 [Ultralytics](https://ultralytics.com/) | YOLO 26 + YOLOE, and actually shipping CoreML exports |
 | 🤖 [Roboflow](https://roboflow.com/) / Scale AI / V7 | Showing what good labeling tools look like, even if we do it on-device instead |
 
 <br/>
