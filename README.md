@@ -27,6 +27,10 @@
 
 **What it does:** Vision Builder scans your iPhone photo library, cuts every object out with SAM 2.1, groups look-alikes, lets you name each group once, and exports a labeled object-detection dataset (COCO, YOLO or CSV), all on the phone.
 
+**Who it is for:** anyone who wants a labeled dataset of their own things, for example to train a detector for a robot, without uploading photos anywhere. You need an iPhone and Xcode to build it; see [Requirements](#-requirements).
+
+**Status:** work in progress. Some parts are rough and some are not wired up yet. The status table below says which.
+
 **Proof:** [real results on a 4,959-photo camera roll](#-does-it-actually-work-yes--here-are-the-numbers), the Swift source for every stage in this repo, and the [model conversion scripts](scripts/). There are no screenshots, demo video or App Store build yet.
 
 <br/>
@@ -323,7 +327,8 @@ bash scripts/convert_models.sh all
 
 # Optional extras, not included in "all":
 bash scripts/convert_models.sh yoloe     # 4,585-class YOLOE detector
-python3 scripts/convert_dinov2.py        # DINOv2 identity model (run inside .venv-models)
+source .venv-models/bin/activate         # created by convert_models.sh
+python3 scripts/convert_dinov2.py        # writes dinov2_small_fp16.mlpackage (and an fp32 variant); add it to the target
 
 # Open in Xcode and build to a real device
 # (Simulator works but it's slow — no Neural Engine)
@@ -394,7 +399,7 @@ open "Vision Builder.xcodeproj"
 | Have a 💡 idea | Start a discussion |
 | Want to 🔧 code | PRs welcome — file structure is mostly self-explanatory, see `CLAUDE.md` |
 
-We're a small team learning as we go. If you're a **robotics person** with opinions about training-data formats, an **iOS dev** who's done CoreML in anger, or just someone who's tried to **label 400 photos of their dog** and hated it — you'd add value here.
+I'm learning as I go. If you're a **robotics person** with opinions about training-data formats, an **iOS dev** who's done CoreML in anger, or just someone who's tried to **label 400 photos of their dog** and hated it — you'd add value here.
 
 <br/>
 
@@ -423,6 +428,5 @@ We're a small team learning as we go. If you're a **robotics person** with opini
 
 <sub>Built with ❤️ + 🤖 + a healthy distrust of cloud services.</sub>
 
-<sub>⭐ Star us on GitHub if you want to follow along — this is going to get fun.</sub>
 
 </div>
