@@ -399,7 +399,7 @@ open "Vision Builder.xcodeproj"
 | Have a 💡 idea | Start a discussion |
 | Want to 🔧 code | PRs welcome — file structure is mostly self-explanatory, see `CLAUDE.md` |
 
-I'm learning as I go. If you're a **robotics person** with opinions about training-data formats, an **iOS dev** who's done CoreML in anger, or just someone who's tried to **label 400 photos of their dog** and hated it — you'd add value here.
+I'm learning as I go. If you're a **robotics person** with opinions about training-data formats, an **iOS dev** who's done CoreML in anger, or just someone who's tried to **label 400 photos of their dog** and hated it, you'd add value here.
 
 <br/>
 
