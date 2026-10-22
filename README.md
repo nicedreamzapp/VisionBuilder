@@ -23,6 +23,10 @@
 
 </div>
 
+<a id="what"></a>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-banner.svg" width="100%" alt="01. What it is. Roboflow on your phone, for training your own robot"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-r1.svg" width="100%" alt="Private. Everything runs on-device, with photos you already took. Cut out and group. SAM 2.1 cuts out every object and groups look-alikes. Export. COCO JSON, YOLO TXT or CSV."></picture>
+
 <br/>
 
 **What it does:** Vision Builder scans your iPhone photo library, cuts every object out with SAM 2.1, groups look-alikes, lets you name each group once, and exports a labeled object-detection dataset (COCO, YOLO or CSV), all on the phone.
@@ -44,9 +48,8 @@
 
 <br/>
 
----
 
-## 📑 Contents
+### 📑 Contents
 
 <table>
 <tr>
@@ -80,9 +83,14 @@
 
 <br/>
 
----
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-rule.svg" width="100%" alt="">
 
-## ✨ The vision (what "finished" actually looks like)
+
+<a id="vision"></a>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-banner.svg" width="100%" alt="02. The vision. What finished actually looks like"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-r1.svg" width="100%" alt="Label once. Name one cluster and every instance inherits the label. Stay private. No cloud, no upload, no free tier."></picture>
+
+### ✨ The vision (what "finished" actually looks like)
 
 Imagine you just bought a robot. Or you're building one. It needs to recognize **your** stuff — your kitchen, your tools, your kid's toys, the specific objects in your house. Not generic ImageNet "person / car / dog." ***Your*** specific stuff.
 
@@ -118,9 +126,14 @@ The end state is a tool you walk around your space with for an afternoon and wal
 
 <br/>
 
----
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-rule.svg" width="100%" alt="">
 
-## 🐕 Does it actually work? Yes — here are the numbers
+
+<a id="numbers"></a>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-banner.svg" width="100%" alt="03. The numbers. Real results on a real camera roll"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-r1.svg" width="100%" alt="4,959 photos off one real iPhone camera roll. 3 dogs the owner identified by name."></picture>
+
+### 🐕 Does it actually work? Yes — here are the numbers
 
 Not a benchmark. **4,959 photos off one real iPhone camera roll**, three dogs the owner then identified by name.
 
@@ -172,9 +185,14 @@ Not a benchmark. **4,959 photos off one real iPhone camera roll**, three dogs th
 
 <br/>
 
----
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-rule.svg" width="100%" alt="">
 
-## 👤 What I built
+
+<a id="built"></a>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-banner.svg" width="100%" alt="04. What I built and why. The app and the glue around the models"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-r1.svg" width="100%" alt="Library scan. Clustering on MobileCLIP embeddings. Live recognition. Point the camera and your labeled objects get named. Model conversion. A pipeline for the CoreML conversions."></picture>
+
+### 👤 What I built
 
 Designed and written by **Matt Macosko**. The models are upstream (Meta SAM 2.1 and DINOv2, Apple MobileCLIP 2, Ultralytics YOLO 26 / YOLOE); the app and glue around them is mine:
 
@@ -191,9 +209,8 @@ Designed and written by **Matt Macosko**. The models are upstream (Meta SAM 2.1 
 
 <br/>
 
----
 
-## 🤔 Why we're building it
+### 🤔 Why we're building it
 
 > Because every "AI for robotics" tutorial assumes you have a labeling team.
 >
@@ -207,9 +224,18 @@ Designed and written by **Matt Macosko**. The models are upstream (Meta SAM 2.1 
 
 <br/>
 
----
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-rule.svg" width="100%" alt="">
 
-## ⚙️ How it works (today)
+
+<a id="status"></a>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s05-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s05-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s05-banner.svg" width="100%" alt="05. How it works and what works now. Today&#x27;s pipeline and the status table"></picture>
+
+**4,585 classes in the YOLOE detector**
+
+🚦 **Status legend** · Working, rough, dormant, or not yet.
+
+
+### ⚙️ How it works (today)
 
 ```mermaid
 flowchart LR
@@ -234,9 +260,8 @@ flowchart LR
 
 <br/>
 
----
 
-## 📦 What's actually working right now
+### 📦 What's actually working right now
 
 > [!NOTE]
 > Status legend — ✅ working · 🟡 functional but rough · 💤 scaffolded, dormant · ❌ not yet
@@ -263,9 +288,14 @@ flowchart LR
 
 <br/>
 
----
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s05-rule.svg" width="100%" alt="">
 
-## 🛠️ Tech stack
+
+<a id="build-it"></a>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-banner.svg" width="100%" alt="06. Tech stack and build. Requirements and how to build it yourself"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-r1.svg" width="100%" alt="iPhone and Xcode. You need both to build it. Optional models. Generate the upgraded mlpackages with the scripts."></picture>
+
+### 🛠️ Tech stack
 
 <table>
 <tr>
@@ -300,9 +330,8 @@ flowchart LR
 
 <br/>
 
----
 
-## 🧰 Requirements
+### 🧰 Requirements
 
 > [!IMPORTANT]
 > - **iOS 26.0+** (Foundation Models APIs + iOS 26 SwiftUI bits)
@@ -313,9 +342,8 @@ flowchart LR
 
 <br/>
 
----
 
-## 🚀 Build it yourself
+### 🚀 Build it yourself
 
 ```bash
 git clone https://github.com/nicedreamzapp/VisionBuilder.git
@@ -347,9 +375,14 @@ open "Vision Builder.xcodeproj"
 
 <br/>
 
----
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-rule.svg" width="100%" alt="">
 
-## 🎬 First-run flow
+
+<a id="roadmap"></a>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-banner.svg" width="100%" alt="07. Roadmap, contributing and license. First run, what is next, credits"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-r1.svg" width="100%" alt="MIT licensed. See LICENSE. PRs welcome. Rough edges are the point."></picture>
+
+### 🎬 First-run flow
 
 ```
 1. Grant photo library access
@@ -366,9 +399,8 @@ open "Vision Builder.xcodeproj"
 
 <br/>
 
----
 
-## 🗺️ Roadmap
+### 🗺️ Roadmap
 
 > [!NOTE]
 > Rough priority order. Subject to change every time we open the app and trip over a bug.
@@ -387,9 +419,8 @@ open "Vision Builder.xcodeproj"
 
 <br/>
 
----
 
-## 🙋 Contributing
+### 🙋 Contributing
 
 > Genuinely, please.
 
@@ -403,9 +434,8 @@ I'm learning as I go. If you're a **robotics person** with opinions about traini
 
 <br/>
 
----
 
-## 🙏 Acknowledgments
+### 🙏 Acknowledgments
 
 | Who | What for |
 | --- | --- |
@@ -416,9 +446,8 @@ I'm learning as I go. If you're a **robotics person** with opinions about traini
 
 <br/>
 
----
 
-## 📜 License
+### 📜 License
 
 **MIT.** Do what you want with it. If you build something cool, tell us — we want to see the robot.
 
@@ -430,3 +459,6 @@ I'm learning as I go. If you're a **robotics person** with opinions about traini
 
 
 </div>
+
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-rule.svg" width="100%" alt="">
+
