@@ -24,8 +24,8 @@
 </div>
 
 <a id="what"></a>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-banner.svg" width="100%" alt="01. What it is. Roboflow on your phone, for training your own robot"></picture>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-r1.svg" width="100%" alt="Private. Everything runs on-device, with photos you already took. Cut out and group. SAM 2.1 cuts out every object and groups look-alikes. Export. COCO JSON, YOLO TXT or CSV."></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s01-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s01-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s01-banner.svg" width="100%" alt="01. What it is. Roboflow on your phone, for training your own robot"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s01-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s01-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s01-r1.svg" width="100%" alt="Private. Everything runs on-device, with photos you already took. Cut out and group. SAM 2.1 cuts out every object and groups look-alikes. Export. COCO JSON, YOLO TXT or CSV."></picture>
 
 <br/>
 
@@ -83,12 +83,12 @@
 
 <br/>
 
-<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s01-rule.svg" width="100%" alt="">
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s01-rule.svg" width="100%" alt="">
 
 
 <a id="vision"></a>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-banner.svg" width="100%" alt="02. The vision. What finished actually looks like"></picture>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-r1.svg" width="100%" alt="Label once. Name one cluster and every instance inherits the label. Stay private. No cloud, no upload, no free tier."></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s02-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s02-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s02-banner.svg" width="100%" alt="02. The vision. What finished actually looks like"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s02-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s02-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s02-r1.svg" width="100%" alt="Label once. Name one cluster and every instance inherits the label. Stay private. No cloud, no upload, no free tier."></picture>
 
 ### ✨ The vision (what "finished" actually looks like)
 
@@ -126,12 +126,12 @@ The end state is a tool you walk around your space with for an afternoon and wal
 
 <br/>
 
-<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s02-rule.svg" width="100%" alt="">
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s02-rule.svg" width="100%" alt="">
 
 
 <a id="numbers"></a>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-banner.svg" width="100%" alt="03. The numbers. Real results on a real camera roll"></picture>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-r1.svg" width="100%" alt="4,959 photos off one real iPhone camera roll. 3 dogs the owner identified by name."></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s03-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s03-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s03-banner.svg" width="100%" alt="03. The numbers. Real results on a real camera roll"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s03-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s03-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s03-r1.svg" width="100%" alt="4,959 photos off one real iPhone camera roll. 3 dogs the owner identified by name."></picture>
 
 ### 🐕 Does it actually work? Yes — here are the numbers
 
@@ -185,12 +185,12 @@ Not a benchmark. **4,959 photos off one real iPhone camera roll**, three dogs th
 
 <br/>
 
-<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s03-rule.svg" width="100%" alt="">
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s03-rule.svg" width="100%" alt="">
 
 
 <a id="built"></a>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-banner.svg" width="100%" alt="04. What I built and why. The app and the glue around the models"></picture>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-r1.svg" width="100%" alt="Library scan. Clustering on MobileCLIP embeddings. Live recognition. Point the camera and your labeled objects get named. Model conversion. A pipeline for the CoreML conversions."></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s04-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s04-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s04-banner.svg" width="100%" alt="04. What I built and why. The app and the glue around the models"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s04-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s04-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s04-r1.svg" width="100%" alt="Library scan. Clustering on MobileCLIP embeddings. Live recognition. Point the camera and your labeled objects get named. Model conversion. A pipeline for the CoreML conversions."></picture>
 
 ### 👤 What I built
 
@@ -224,11 +224,11 @@ Designed and written by **Matt Macosko**. The models are upstream (Meta SAM 2.1 
 
 <br/>
 
-<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s04-rule.svg" width="100%" alt="">
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s04-rule.svg" width="100%" alt="">
 
 
 <a id="status"></a>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s05-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s05-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s05-banner.svg" width="100%" alt="05. How it works and what works now. Today&#x27;s pipeline and the status table"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s05-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s05-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s05-banner.svg" width="100%" alt="05. How it works and what works now. Today&#x27;s pipeline and the status table"></picture>
 
 **4,585 classes in the YOLOE detector**
 
@@ -288,12 +288,12 @@ flowchart LR
 
 <br/>
 
-<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s05-rule.svg" width="100%" alt="">
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s05-rule.svg" width="100%" alt="">
 
 
 <a id="build-it"></a>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-banner.svg" width="100%" alt="06. Tech stack and build. Requirements and how to build it yourself"></picture>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-r1.svg" width="100%" alt="iPhone and Xcode. You need both to build it. Optional models. Generate the upgraded mlpackages with the scripts."></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s06-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s06-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s06-banner.svg" width="100%" alt="06. Tech stack and build. Requirements and how to build it yourself"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s06-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s06-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s06-r1.svg" width="100%" alt="iPhone and Xcode. You need both to build it. Optional models. Generate the upgraded mlpackages with the scripts."></picture>
 
 ### 🛠️ Tech stack
 
@@ -375,12 +375,12 @@ open "Vision Builder.xcodeproj"
 
 <br/>
 
-<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s06-rule.svg" width="100%" alt="">
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s06-rule.svg" width="100%" alt="">
 
 
 <a id="roadmap"></a>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-banner.svg" width="100%" alt="07. Roadmap, contributing and license. First run, what is next, credits"></picture>
-<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-r1.svg" width="100%" alt="MIT licensed. See LICENSE. PRs welcome. Rough edges are the point."></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s07-banner-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s07-banner-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s07-banner.svg" width="100%" alt="07. Roadmap, contributing and license. First run, what is next, credits"></picture>
+<picture><source media="(max-width: 610px), (min-width: 768px) and (max-width: 895px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s07-r1-m.svg"><source media="(max-width: 1149px)" srcset="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s07-r1-mid.svg"><img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s07-r1.svg" width="100%" alt="MIT licensed. See LICENSE. PRs welcome. Rough edges are the point."></picture>
 
 ### 🎬 First-run flow
 
@@ -460,5 +460,5 @@ I'm learning as I go. If you're a **robotics person** with opinions about traini
 
 </div>
 
-<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/main/assets/readme/s07-rule.svg" width="100%" alt="">
+<img src="https://raw.githubusercontent.com/nicedreamzapp/VisionBuilder/717ba1c8427728a99eeb10421dd40eff19e958f0/assets/readme/s07-rule.svg" width="100%" alt="">
 
