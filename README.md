@@ -455,7 +455,7 @@ I'm learning as I go. If you're a **robotics person** with opinions about traini
 
 <div align="center">
 
-<sub>Built with ❤️ + 🤖 + a healthy distrust of cloud services.</sub>
+<sub>Built with ❤️ and a healthy distrust of cloud services.</sub>
 
 
 </div>
